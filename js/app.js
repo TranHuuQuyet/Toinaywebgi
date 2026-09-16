@@ -95,10 +95,10 @@ function render(newId = null) {
   const complete = count === sites.length;
   elements.completionBadge.hidden = !complete;
   elements.openCase.disabled = complete || state.isOpening;
-  elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'MỞ HÒM';
+  elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'ĐẬP QUẢ LỌ NGAY';
   elements.caseMessage.textContent = complete
     ? 'COLLECTION COMPLETE 50 / 50'
-    : 'MỞ HÒM ĐỂ NHẬN MỘT VẬT PHẨM MỚI';
+    : 'GIỜ KHÔNG LỌ THÌ KHI NÀO MỚI LỌ?';
 }
 
 function setOpening(opening) {
@@ -122,7 +122,7 @@ function renderRecentDrop(drop) {
     return;
   }
   elements.recentDrop.classList.remove('hidden');
-  elements.recentDrop.innerHTML = `Lần gần nhất: <img src="${drop.logo}" alt="" width="18" height="18"> <strong>${drop.name}</strong> · <span class="rarity-${drop.rarity}">${drop.rarity.toUpperCase()}</span>`;
+  elements.recentDrop.innerHTML = `Web vừa lọ: <img src="${drop.logo}" alt="" width="18" height="18"> <strong>${drop.name}</strong> · <span class="rarity-${drop.rarity}">${drop.rarity.toUpperCase()}</span>`;
 }
 
 function updateRecentDrop(winner) {
@@ -224,14 +224,14 @@ export async function openCase(forcedWinner = null) {
   elements.caseShell.classList.remove('is-shaking');
   elements.caseShell.classList.add('is-unlocked');
   sound.openCase();
-  elements.caseMessage.textContent = 'HÒM ĐÃ MỞ. SẴN SÀNG...';
+  elements.caseMessage.textContent = 'WEB ĐÃ MỞ. SẴN SÀNG LỌ...';
   await wait(700);
   await logosReady;
 
   elements.caseShell.hidden = true;
   elements.rouletteWrap.classList.add('is-visible');
   elements.rouletteWrap.setAttribute('aria-hidden', 'false');
-  elements.rouletteStatus.textContent = 'ĐANG QUAY...';
+  elements.rouletteStatus.textContent = 'ĐANG QUAY TAY...';
 
   await spinRoulette({
     viewport: elements.rouletteViewport,
@@ -244,7 +244,7 @@ export async function openCase(forcedWinner = null) {
     }
   });
 
-  elements.rouletteStatus.textContent = 'VẬT PHẨM CỦA BẠN';
+  elements.rouletteStatus.textContent = 'LỌ CỦA BẠN';
   sound.stop();
 
   // Pauses before reveal (Requirement 7)
@@ -378,7 +378,7 @@ elements.resultDialog.addEventListener('cancel', (event) => {
 });
 
 elements.resetCollection.addEventListener('click', () => {
-  if (!confirm('Bạn có chắc muốn reset toàn bộ collection?')) return;
+  if (!confirm('Bạn có chắc muốn LỌ LẠI TỪ ĐẦU?')) return;
   storage.resetCollection();
   state.unlockedSites = [];
   renderRecentDrop(null);
