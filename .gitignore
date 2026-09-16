@@ -4,5 +4,6 @@ node_modules/
 .DS_Store
 .chrome-cdp/
 .chrome-test/
+.tmp-chrome*/
 desktop.png
 runtime-*.png
