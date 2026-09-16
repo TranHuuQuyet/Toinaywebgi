@@ -55,8 +55,8 @@ function render(newId = null) {
   elements.openCase.disabled = complete || state.isOpening;
   elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'OPEN CASE';
   elements.caseMessage.textContent = complete
-    ? 'COLLECTION COMPLETE · 50 / 50 UNLOCKED'
-    : '1 CASE · 1 NEW DISCOVERY · NO DUPLICATES';
+    ? 'COLLECTION COMPLETE · 50 / 50'
+    : '1 HÒM · 1 BRAND MỚI · KHÔNG TRÙNG';
 }
 
 function setOpening(opening) {
@@ -80,19 +80,19 @@ async function openCase() {
   sound.press();
   sound.unlockCase();
   elements.caseShell.classList.add('is-shaking');
-  elements.caseMessage.textContent = 'AUTHENTICATING CASE…';
+  elements.caseMessage.textContent = 'OPENING...';
   await wait(540);
   elements.caseShell.classList.remove('is-shaking');
   elements.caseShell.classList.add('is-unlocked');
   sound.openCase();
-  elements.caseMessage.textContent = 'LOCK RELEASED · DECRYPTING ARCHIVE…';
-  await wait(580);
+  elements.caseMessage.textContent = 'HÒM ĐÃ MỞ · GET READY...';
+  await wait(720);
   await logosReady;
 
   elements.caseShell.hidden = true;
   elements.rouletteWrap.classList.add('is-visible');
   elements.rouletteWrap.setAttribute('aria-hidden', 'false');
-  elements.rouletteStatus.textContent = 'SCANNING';
+  elements.rouletteStatus.textContent = 'ROLLING...';
   await spinRoulette({
     viewport: elements.rouletteViewport,
     track: elements.rouletteTrack,
@@ -101,15 +101,21 @@ async function openCase() {
     reducedMotion,
     onTick: (progress) => {
       sound.tick(progress);
-      if (progress > 0.75) elements.rouletteStatus.textContent = 'TARGET LOCKING';
+      if (progress > 0.75) elements.rouletteStatus.textContent = 'SLOWING DOWN...';
     }
   });
 
-  elements.rouletteStatus.textContent = 'TARGET ACQUIRED';
-  if (winner.rarity === 'mythic') await wait(220);
+  elements.rouletteStatus.textContent = 'YOU GOT';
+  sound.stop();
+  if (winner.rarity === 'epic') await wait(100);
+  if (winner.rarity === 'legendary' || winner.rarity === 'mythic') {
+    document.body.classList.add('is-anticipating-reveal');
+  }
+  if (winner.rarity === 'legendary') await wait(150);
+  if (winner.rarity === 'mythic') await wait(250);
   elements.screenFlash.className = `screen-flash rarity-${winner.rarity} active`;
   sound.reveal(winner.rarity);
-  await wait(500);
+  await wait({ common: 80, uncommon: 140, rare: 240, epic: 340, legendary: 420, mythic: 520 }[winner.rarity]);
   state.unlockedSites.push(winner.id);
   storage.setUnlocked(state.unlockedSites);
   render(winner.id);
@@ -118,7 +124,10 @@ async function openCase() {
 }
 
 function showResult(winner) {
+  document.body.classList.remove('is-anticipating-reveal');
+  elements.resultDialog.className = `result-dialog reveal-${winner.rarity}`;
   elements.resultPanel.className = `result-panel rarity-${winner.rarity}`;
+  document.body.classList.add(`is-revealing-${winner.rarity}`);
   const headings = { legendary: 'LEGENDARY DISCOVERY', mythic: 'MYTHIC DISCOVERY' };
   elements.resultKicker.textContent = headings[winner.rarity] || 'NEW DISCOVERY';
   const particleCount = { common: 0, uncommon: 4, rare: 8, epic: 12, legendary: 20, mythic: 28 }[winner.rarity];
@@ -133,6 +142,8 @@ function showResult(winner) {
 
 function closeResult() {
   elements.resultDialog.close();
+  document.body.className = document.body.className.replace(/\bis-revealing-\S+/g, '').trim();
+  elements.resultDialog.className = 'result-dialog';
   elements.screenFlash.className = 'screen-flash';
   elements.rouletteWrap.classList.remove('is-visible');
   elements.rouletteWrap.setAttribute('aria-hidden', 'true');

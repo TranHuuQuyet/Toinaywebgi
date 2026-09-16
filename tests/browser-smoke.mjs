@@ -98,6 +98,14 @@ await evaluate(`(() => { const image = document.querySelector('.collection-card.
 await waitFor("document.querySelector('.collection-card.is-unlocked .brand-mark').classList.contains('is-fallback')");
 await screenshot('runtime-desktop.png');
 
+await send('Emulation.setDeviceMetricsOverride', {
+  width: 1366, height: 768, deviceScaleFactor: 1, mobile: false
+});
+await send('Page.reload', { ignoreCache: true });
+await waitFor("document.readyState === 'complete'");
+assert.equal(await evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), true);
+await screenshot('runtime-laptop.png');
+
 for (const width of [360, 390, 430]) {
   await send('Emulation.setDeviceMetricsOverride', {
     width, height: 844, deviceScaleFactor: 1, mobile: true
@@ -120,7 +128,7 @@ await evaluate(`import('./js/data.js').then(({ sites }) => {
 })`);
 await waitFor("document.querySelector('#open-case')?.disabled === true");
 assert.equal(await evaluate("document.querySelector('#open-case span').textContent"), 'COLLECTION COMPLETE');
-assert.match(await evaluate("document.querySelector('#case-message').textContent"), /50 \/ 50 UNLOCKED/);
+assert.match(await evaluate("document.querySelector('#case-message').textContent"), /COLLECTION COMPLETE · 50 \/ 50/);
 
 await evaluate("window.confirm = () => true; document.querySelector('#reset-collection').click()");
 assert.equal(await evaluate("localStorage.getItem('unlockedSites')"), null);

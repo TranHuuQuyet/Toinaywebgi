@@ -27,27 +27,28 @@
 
   <main id="main">
     <section class="hero" aria-labelledby="case-heading">
-      <div class="eyebrow"><span>ARCHIVE // 001</span><span>STATUS: ACTIVE</span></div>
-      <h1 id="case-heading">WHAT WILL YOU<br><em>DISCOVER?</em></h1>
-      <p class="hero-copy">Mở một Web Case. Săn sáu cấp độ hiếm. Hoàn thành kho lưu trữ gồm 50 biểu tượng của internet.</p>
+      <span class="game-mode">CASE OPENING</span>
+      <h1 id="case-heading">TỐI NAY <em>MỞ GÌ?</em></h1>
+      <p class="hero-copy">Mở hòm, săn rarity và hoàn thành collection 50 brand.</p>
 
       <div class="case-stage">
         <div class="case-shell" id="case-shell" aria-hidden="true">
-          <div class="case-lock-bars"><span></span><span></span></div>
-          <div class="case-corner corner-tl"></div><div class="case-corner corner-tr"></div>
-          <div class="case-corner corner-bl"></div><div class="case-corner corner-br"></div>
-          <div class="case-topline"><span>W/A</span><span>SECURE CONTAINER</span><span>01</span></div>
-          <div class="case-core">
-            <span class="case-kicker">WEB ARCHIVE</span>
-            <div class="case-glyph">?</div>
-            <strong>CLASSIFIED CASE</strong>
-            <small>50 RECORDS // NO EXTERNAL ACCESS</small>
+          <div class="crate-light"></div>
+          <div class="crate-lid">
+            <span class="crate-hinge hinge-left"></span><span class="crate-hinge hinge-right"></span>
+            <span class="crate-scratch scratch-one"></span><span class="crate-scratch scratch-two"></span>
           </div>
-          <div class="case-seal"><span></span>LOCKED</div>
+          <div class="crate-body">
+            <span class="crate-rail rail-left"></span><span class="crate-rail rail-right"></span>
+            <div class="crate-emblem">?</div>
+            <span class="crate-label">WEB CASE</span>
+            <div class="crate-lock"><span></span></div>
+          </div>
+          <div class="crate-shadow"></div>
         </div>
 
         <div class="roulette-wrap" id="roulette-wrap" aria-hidden="true">
-          <div class="roulette-labels"><span>LIVE DECRYPTION</span><span id="roulette-status">SCANNING</span></div>
+          <div class="roulette-labels"><span>CASE ROLL</span><span id="roulette-status">ROLLING...</span></div>
           <div class="roulette-viewport" id="roulette-viewport">
             <div class="marker" aria-hidden="true"><span></span></div>
             <div class="roulette-track" id="roulette-track"></div>
@@ -59,22 +60,22 @@
         <button class="primary-button" id="open-case" type="button">
           <span>OPEN CASE</span><span class="button-code">[ ENTER ]</span>
         </button>
-        <p id="case-message" role="status" aria-live="polite">1 CASE · 1 NEW DISCOVERY · NO DUPLICATES</p>
+        <p id="case-message" role="status" aria-live="polite">1 HÒM · 1 BRAND MỚI · KHÔNG TRÙNG</p>
       </div>
     </section>
 
     <section class="collection-section" aria-labelledby="collection-heading">
       <div class="section-heading">
-        <div><span class="section-index">02 / ARCHIVE</span><h2 id="collection-heading">WEB COLLECTION</h2></div>
+        <div><span class="section-index">YOUR INVENTORY</span><h2 id="collection-heading">COLLECTION</h2></div>
         <div class="total-stat"><strong id="collection-count">0 / 50</strong><span>DISCOVERED</span></div>
       </div>
       <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
-      <p class="completion-badge" id="completion-badge" hidden>ARCHIVE COMPLETE // 50 OF 50</p>
+      <p class="completion-badge" id="completion-badge" hidden>COLLECTION COMPLETE // 50 OF 50</p>
       <div id="collection" class="collection" aria-live="polite"></div>
     </section>
 
     <section class="reset-zone" aria-labelledby="reset-heading">
-      <div><span class="section-index">SYSTEM / MAINTENANCE</span><h2 id="reset-heading">ARCHIVE CONTROLS</h2></div>
+      <div><span class="section-index">COLLECTION OPTIONS</span><h2 id="reset-heading">RESET PROGRESS</h2></div>
       <button class="danger-button" id="reset-collection" type="button">RESET COLLECTION</button>
     </section>
   </main>
@@ -88,10 +89,8 @@
   <div class="age-gate" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title">
     <div class="age-panel">
       <span class="age-number">18+</span>
-      <span class="section-index">CONTENT PROTOCOL</span>
       <h2 id="age-title">TỐI NAY WEB GÌ?</h2>
-      <p>Đây là một mini game random / collection.</p>
-      <p>Website không lưu trữ, phát hoặc chuyển hướng người dùng tới nội dung người lớn.</p>
+      <p>Đây là mini game random / collection. Không lưu trữ hoặc chuyển hướng tới nội dung người lớn.</p>
       <button class="primary-button" id="confirm-age" type="button">TÔI ĐÃ 18+</button>
       <small>By continuing, you confirm that you are at least 18 years old.</small>
     </div>
@@ -99,10 +98,11 @@
 
   <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title">
     <div class="result-panel" id="result-panel">
+      <div class="result-rays" aria-hidden="true"></div>
       <div class="result-particles" id="result-particles" aria-hidden="true"></div>
       <button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button>
       <span class="result-kicker" id="result-kicker">NEW DISCOVERY</span>
-      <h2 id="result-title">YOU UNLOCKED</h2>
+      <h2 id="result-title">BẠN ĐÃ MỞ KHÓA</h2>
       <div class="result-mark brand-mark"><img id="result-logo" alt=""><span class="brand-fallback" id="result-initials"></span></div>
       <strong class="result-name" id="result-name"></strong>
       <span class="result-rarity" id="result-rarity"></span>

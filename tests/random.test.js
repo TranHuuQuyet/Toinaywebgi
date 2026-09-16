@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, stat } from 'node:fs/promises';
-import { sites, RARITY_CONFIG } from '../js/data.js';
+import { sites, RARITY_CONFIG, VIETNAM_RELEVANT_NAMES } from '../js/data.js';
 import { getAvailableRarities, pickWinner, selectWeightedRarity } from '../js/random.js';
 
 test('dataset contains exactly 50 unique items in the required rarity distribution', () => {
@@ -38,14 +38,22 @@ test('Vietnam-focused priority brands are represented in the dataset', () => {
   ]) assert.equal(names.has(brand), true, `${brand} is missing`);
 });
 
-test('every brand has a unique local logo asset and no generic placeholder', async () => {
+test('at least 35 collection brands have documented Vietnam relevance', () => {
+  assert.ok(VIETNAM_RELEVANT_NAMES.length >= 35);
+  assert.equal(new Set(VIETNAM_RELEVANT_NAMES).size, VIETNAM_RELEVANT_NAMES.length);
+  VIETNAM_RELEVANT_NAMES.forEach((name) => assert.ok(sites.some((site) => site.name === name), name));
+});
+
+test('every brand has a unique local raster logo asset and no generated placeholder', async () => {
   assert.equal(new Set(sites.map(({ logo }) => logo)).size, 50);
   for (const site of sites) {
-    assert.doesNotMatch(site.logo, /placeholder/i);
+    assert.match(site.logo, /\.(png|webp|ico)$/i);
+    assert.doesNotMatch(site.logo, /placeholder|generated/i);
     const file = site.logo.replace(/^\.\//, '');
     await access(file);
     assert.ok((await stat(file)).size < 100 * 1024, `${file} exceeds 100 KB`);
   }
+  await assert.rejects(access(new URL('../scripts/generate-brand-logos.mjs', import.meta.url)));
 });
 
 test('weighted selection excludes rarities whose items are exhausted', () => {

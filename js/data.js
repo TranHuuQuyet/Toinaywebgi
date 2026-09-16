@@ -9,25 +9,35 @@ export const RARITY_CONFIG = Object.freeze({
 
 const catalog = Object.freeze({
   common: [
-    'PornOne', 'Beeg', 'Thumbzilla', 'Mofos', 'Vixen',
-    'Blacked', 'Tushy', 'Playboy', 'Naughty America', 'Kink',
-    'HClips', 'TNAFlix', 'Dit69', 'Phe69', 'VNSexTop1'
+    'PhimSetHD', 'XPhim69', 'JAVHD1', 'PhimSexSuong3X', 'SexDam',
+    'SexTop1', 'SexVietSubs', 'Nguon3X', 'ClipSexViet', 'XNhau',
+    'SexViet247', 'HeoVL', 'SexVietDam', 'Viet69', 'JAVSub'
   ],
   uncommon: [
-    'LiveJasmin', 'Cam4', 'CamSoda', 'MyFreeCams', 'ManyVids',
-    'Motherless', 'Tube8', 'Reality Kings', 'Bang Bros', 'xHamsterLive', 'JAVHDZ'
+    'VLXX', 'VNSexTop1', 'Dit69', 'Phe69', 'xHamsterLive', 'ThePornDude',
+    'LiveJasmin', 'Cam4', 'BongaCams', 'Fansly', 'Reality Kings'
   ],
   rare: [
-    'RedTube', 'YouPorn', 'Eporner', 'BongaCams', 'Stripchat',
-    'Chaturbate', 'OnlyFans', 'Brazzers', 'Fansly'
+    'BoyfriendTV', 'JAVHD', 'HugeSex', 'JAVHDPorn', 'TubePornstars',
+    'Eporner', 'RedTube', 'YouPorn', 'Bang Bros'
   ],
   epic: [
-    'XHSpot', 'TubePornstars', 'JAVHDPorn', 'HugeSex',
-    'JAVHD', 'BoyfriendTV', 'SpankBang'
+    'XHSpot', 'Xasiat', 'HentaiRead', 'Chaturbate',
+    'Stripchat', 'OnlyFans', 'Brazzers'
   ],
-  legendary: ['HentaiEra', 'HentaiRead', 'JAVTiful', 'XNXX', 'Xasiat'],
+  legendary: ['HentaiEra', 'JAVTiful', 'XNXX', 'SpankBang', 'Playboy'],
   mythic: ['Pornhub', 'XVideos', 'xHamster']
 });
+
+export const VIETNAM_RELEVANT_NAMES = Object.freeze([
+  'PhimSetHD', 'XPhim69', 'JAVHD1', 'PhimSexSuong3X', 'SexDam',
+  'SexTop1', 'SexVietSubs', 'Nguon3X', 'ClipSexViet', 'XNhau',
+  'SexViet247', 'HeoVL', 'SexVietDam', 'Viet69', 'JAVSub',
+  'VLXX', 'VNSexTop1', 'Dit69', 'Phe69', 'xHamsterLive', 'ThePornDude',
+  'BoyfriendTV', 'JAVHD', 'HugeSex', 'JAVHDPorn', 'TubePornstars',
+  'XHSpot', 'Xasiat', 'HentaiRead', 'HentaiEra', 'JAVTiful', 'XNXX',
+  'Pornhub', 'XVideos', 'xHamster'
+]);
 
 export function getInitials(name) {
   const words = name.replace(/([a-z])([A-Z])/g, '$1 $2').split(/[\s-]+/);
@@ -39,6 +49,10 @@ function slugify(name) {
   return name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
 
+const logoOverrides = Object.freeze({
+  XPhim69: './assets/logos/xphim69.ico'
+});
+
 let itemNumber = 0;
 export const sites = Object.freeze(
   Object.entries(catalog).flatMap(([rarity, names]) => names.map((name) => {
@@ -46,7 +60,7 @@ export const sites = Object.freeze(
     return Object.freeze({
       id: `site-${String(itemNumber).padStart(3, '0')}`,
       name,
-      logo: `./assets/logos/${slugify(name)}.svg`,
+      logo: logoOverrides[name] || `./assets/logos/${slugify(name)}.png`,
       rarity
     });
   }))

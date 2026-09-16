@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, access } from 'node:fs/promises';
+import { readFile, access, stat } from 'node:fs/promises';
 import { glob } from 'node:fs/promises';
 
 test('required GitHub Pages entry files exist', async () => {
@@ -31,5 +31,21 @@ test('application navigation stays internal and has no external window navigatio
   for await (const file of glob('js/*.js')) {
     const source = await readFile(file, 'utf8');
     assert.doesNotMatch(source, /window\.(?:open|location)|location\.(?:assign|replace)/);
+  }
+});
+
+test('production UI copy avoids the old archive and terminal framing', async () => {
+  const source = `${await readFile('index.html', 'utf8')}\n${await readFile('js/app.js', 'utf8')}`;
+  assert.doesNotMatch(source, /WEB ARCHIVE|CLASSIFIED CASE|LIVE DECRYPTION|AUTHENTICATING CASE|TARGET ACQUIRED/);
+});
+
+test('all required mechanical sound samples are stored locally', async () => {
+  const names = [
+    'case-click', 'case-unlock', 'case-open', 'roulette-tick', 'roulette-stop',
+    'reveal-common', 'reveal-rare', 'reveal-epic', 'reveal-legendary', 'reveal-mythic'
+  ];
+  for (const name of names) {
+    const info = await stat(`assets/sounds/${name}.wav`);
+    assert.ok(info.size > 100, name);
   }
 });

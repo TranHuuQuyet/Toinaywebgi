@@ -1,6 +1,6 @@
-# Tối nay web gì? — Version 2
+# Tối nay web gì? — Version 2.1
 
-Một mini game static mở `Web Case`, săn rarity và hoàn thành album 50 thương hiệu website 18+. Project chỉ dùng tên thương hiệu và các biểu trưng chữ viết tắt trung tính; không lưu URL thật, không có outbound link, không embed và không chứa hình ảnh hoặc video explicit.
+Một mini game static mở `Web Case`, săn rarity và hoàn thành album 50 thương hiệu website 18+. Project chỉ dùng tên thương hiệu và brand icon/favicon local; không lưu URL thật, không có outbound link, không embed và không chứa hình ảnh hoặc video explicit.
 
 ## Features
 
@@ -11,9 +11,10 @@ Một mini game static mở `Web Case`, săn rarity và hoàn thành album 50 th
 - Không duplicate; mỗi lần mở case luôn tạo một discovery mới.
 - Album 50 fixed slot, progress bar, thống kê theo rarity và complete state.
 - Local persistence cho collection, age confirmation và sound setting.
-- Âm thanh gốc nhiều lớp được tổng hợp bằng Web Audio API qua một master gain; không dùng audio từ game khác.
+- Mười sample WAV cơ khí tự sản xuất, phát bằng Web Audio API qua một master gain; oscillator chỉ bổ sung bass cho reveal hiếm.
 - Reveal riêng theo rarity, particle/sweep cho tier cao, reduced-motion mode, keyboard focus và layout responsive từ 360px.
-- 50 SVG nhận diện trung tính, riêng biệt và lưu local; ảnh lỗi tự chuyển sang chữ viết tắt mà không làm vỡ layout.
+- 50 favicon/brand icon công khai được lưu local; ảnh lỗi tự chuyển sang chữ viết tắt mà không làm vỡ layout.
+- Dataset có 35/50 brand với bằng chứng traffic/recognition tại Việt Nam và 15 brand global bổ sung.
 - Trang `404.html` nội bộ cho mọi unlocked card.
 - Tương thích GitHub Pages repository subpath nhờ toàn bộ asset path dạng relative.
 
@@ -46,9 +47,10 @@ Không có framework, backend, database, authentication hoặc API server.
 │   ├── roulette.js
 │   ├── sound.js
 │   └── storage.js
-├── assets/logos/              # 50 SVG local riêng biệt
+├── assets/logos/              # 50 favicon/brand icon local
+├── assets/sounds/             # 10 WAV cơ khí tự sản xuất
 ├── docs/dataset-research.md   # phương pháp và nguồn nghiên cứu dataset
-├── scripts/generate-brand-logos.mjs
+├── scripts/generate-sound-samples.mjs
 ├── tests/
 │   ├── random.test.js
 │   ├── roulette.test.js
@@ -116,13 +118,13 @@ Không thêm các field `url`, `link`, `website` hoặc `redirect`.
 ## Thêm logo
 
 1. Chỉ dùng logo hoặc favicon không explicit và có quyền sử dụng phù hợp.
-2. Tối ưu thành SVG, WebP hoặc PNG nhỏ rồi lưu trong `assets/logos/`.
+2. Tối ưu thành ICO, WebP hoặc PNG nhỏ rồi lưu trong `assets/logos/`.
 3. Sửa local relative path trong `js/data.js`.
-4. Không hotlink ảnh bên ngoài. Nếu quyền sử dụng không rõ, chạy `node scripts/generate-brand-logos.mjs` để tạo nhận diện trung tính riêng và giữ fallback chữ viết tắt.
+4. Không hotlink ảnh bên ngoài và không dùng SVG template giả. Nếu asset lỗi hoặc không khả dụng, runtime mới hiển thị fallback chữ viết tắt.
 
 ## Thêm sound
 
-Sound hiện được tạo trực tiếp bằng oscillator và envelope trong `js/sound.js`, giúp project nhẹ và tránh bản quyền. Có thể thêm file royalty-free hoặc public-domain vào `assets/sounds/` rồi tải bằng relative path. Không sử dụng sound trích từ Counter-Strike hoặc game khác.
+Sound chính nằm trong `assets/sounds/` và được tạo từ transient noise, cộng hưởng kim loại và impact bằng script `scripts/generate-sound-samples.mjs`. Runtime phát sample qua Web Audio API; oscillator chỉ tạo sub-bass phụ cho Legendary/Mythic. Không sử dụng sound trích từ Counter-Strike hoặc game khác.
 
 ## Copyright disclaimer
 
