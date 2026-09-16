@@ -14,6 +14,8 @@ await new Promise((resolve, reject) => {
 let sequence = 0;
 const pending = new Map();
 const runtimeErrors = [];
+let mockedGlobalOpens = 42;
+let mockPostCount = 0;
 socket.addEventListener('message', ({ data }) => {
   const message = JSON.parse(data);
   if (message.id && pending.has(message.id)) {
@@ -23,15 +25,26 @@ socket.addEventListener('message', ({ data }) => {
   }
   if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params.exceptionDetails.text);
   if (message.method === 'Fetch.requestPaused') {
-    const payload = Buffer.from(JSON.stringify({ stargazers_count: 123 }), 'utf8').toString('base64');
+    const { url, method } = message.params.request;
+    const isWorker = url.startsWith('https://toinaywebgi-counter.toinaywebgi.workers.dev/');
+    if (isWorker && method === 'POST' && url.endsWith('/open-case')) {
+      mockedGlobalOpens += 1;
+      mockPostCount += 1;
+    }
+    const body = !isWorker ? { stargazers_count: 123 }
+      : url.endsWith('/github-stars') ? { stars: 123 }
+        : { totalOpens: mockedGlobalOpens };
+    const payload = Buffer.from(JSON.stringify(body), 'utf8').toString('base64');
     void send('Fetch.fulfillRequest', {
       requestId: message.params.requestId,
-      responseCode: 200,
+      responseCode: method === 'OPTIONS' ? 204 : 200,
       responseHeaders: [
         { name: 'Content-Type', value: 'application/json' },
-        { name: 'Access-Control-Allow-Origin', value: '*' }
+        { name: 'Access-Control-Allow-Origin', value: 'http://127.0.0.1:4173' },
+        { name: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+        { name: 'Access-Control-Allow-Headers', value: 'Content-Type' }
       ],
-      body: payload
+      ...(method === 'OPTIONS' ? {} : { body: payload })
     }).catch((error) => runtimeErrors.push(error.message));
   }
   if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
@@ -73,7 +86,10 @@ await send('Page.enable');
 await send('Network.enable');
 await send('Network.setCacheDisabled', { cacheDisabled: true });
 await send('Fetch.enable', {
-  patterns: [{ urlPattern: 'https://api.github.com/repos/TranHuuQuyet/Toinaywebgi', requestStage: 'Request' }]
+  patterns: [
+    { urlPattern: 'https://api.github.com/repos/TranHuuQuyet/Toinaywebgi', requestStage: 'Request' },
+    { urlPattern: 'https://toinaywebgi-counter.toinaywebgi.workers.dev/*', requestStage: 'Request' }
+  ]
 });
 await send('Emulation.setEmulatedMedia', {
   features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }]
@@ -171,6 +187,7 @@ for (let index = 0; index < 5; index += 1) {
   await evaluate("document.querySelector('#continue-button').click()");
 }
 assert.equal(await evaluate("JSON.parse(localStorage.getItem('unlockedSites')).length"), 10);
+assert.equal(mockPostCount, 10);
 assert.match(await evaluate("document.querySelector('#collection-count').textContent"), /^10 \/ 50$/);
 assert.equal(await evaluate("[...document.images].every((image) => image.complete && image.naturalWidth > 0)"), true);
 await evaluate(`(() => { const image = document.querySelector('.collection-card.is-unlocked .brand-mark img'); image.dispatchEvent(new Event('error')); })()`);
@@ -222,7 +239,7 @@ assert.equal(await evaluate("document.querySelector('#collection-count').textCon
 // Check GitHub badge & global counter
 assert.equal(await evaluate("document.querySelector('#github-link').getAttribute('href')"), 'https://github.com/TranHuuQuyet/Toinaywebgi');
 assert.equal(await evaluate("document.querySelector('#github-link').getAttribute('target')"), '_blank');
-assert.equal(await evaluate("document.querySelector('#global-counter-val').textContent"), '...');
+assert.equal(await evaluate("document.querySelector('#global-counter-val').textContent"), '52');
 assert.ok(await evaluate("document.querySelector('#global-counter').textContent.includes('Lượt khai mở:')"));
 assert.ok(await evaluate("document.querySelector('#reveal-canvas') !== null"));
 
