@@ -1,14 +1,14 @@
-# Tối nay web gì? — Version 2.2
+# Tối nay web gì? - Version 2.2.1
 
 Một mini case-opening game lấy cảm hứng từ trải nghiệm mở hòm CS2 nhưng mang giao diện Dark Game UI độc lập và tối giản. Game chọn ngẫu nhiên một trong 50 thương hiệu website 18+ để người chơi sưu tập vào album; project chỉ sử dụng tên thương hiệu và favicon/icon local, hoàn toàn không lưu trữ URL thật, không có link ra ngoài và không chứa nội dung explicit.
 
 ---
 
-## 1. Tính năng nổi bật (V2.2)
+## 1. Tính năng nổi bật (V2.2.1)
 
-- **Roulette Suspense & Mechanical Deceleration**:
-  - Thời lượng quay 6.2s với đường cong giảm tốc 3 giai đoạn (Cruise $\rightarrow$ Braking $\rightarrow$ Suspense Tail).
-  - Khoảng 1.5 giây cuối cùng chuyển động chậm dần từng nấc cơ học (`tick... tick... tick...... CLACK`) tạo cảm giác hồi hộp chân thực.
+- **Roulette giảm tốc liên tục**:
+  - Thời lượng quay 5.4s trên desktop và 5.1s trên mobile với một đường cong quartic liên tục duy nhất.
+  - Vận tốc chỉ giảm, không có breakpoint, tăng tốc lại hoặc thay đổi pha cảm nhận được; các tick cuối giãn tự nhiên trước tiếng dừng.
   - Winner được tính toán và chọn trước (`predetermined winner`), không fake near-miss thao túng kết quả.
   - Kim roulette phát sáng và phát âm thanh tick đồng bộ khi từng thẻ lướt qua.
 

@@ -9,6 +9,7 @@ import { ParticleEngine } from './particles.js';
 import { API_BASE_URL, GITHUB_REPO, GITHUB_REPO_URL } from './config.js';
 
 const $ = (selector) => document.querySelector(selector);
+const isDebugMode = new URLSearchParams(location.search).get('debug') === 'true';
 const validIds = new Set(sites.map(({ id }) => id));
 const state = {
   isOpening: false,
@@ -65,8 +66,8 @@ function render(newId = null) {
   elements.openCase.disabled = complete || state.isOpening;
   elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'MỞ HÒM';
   elements.caseMessage.textContent = complete
-    ? 'COLLECTION COMPLETE · 50 / 50'
-    : '1 HÒM · 1 BRAND MỚI · KHÔNG TRÙNG';
+    ? 'COLLECTION COMPLETE 50 / 50'
+    : 'MỞ HÒM ĐỂ NHẬN MỘT VẬT PHẨM MỚI';
 }
 
 function setOpening(opening) {
@@ -104,7 +105,7 @@ function updateRecentDrop(winner) {
 async function fetchGlobalOpens() {
   if (!elements.globalCounterVal) return;
   if (!API_BASE_URL) {
-    elements.globalCounterVal.textContent = '—';
+    elements.globalCounterVal.textContent = '...';
     return;
   }
   try {
@@ -115,7 +116,7 @@ async function fetchGlobalOpens() {
       elements.globalCounterVal.textContent = data.totalOpens.toLocaleString('vi-VN');
     }
   } catch {
-    elements.globalCounterVal.textContent = '—';
+    elements.globalCounterVal.textContent = '...';
   }
 }
 
@@ -189,14 +190,14 @@ export async function openCase(forcedWinner = null) {
   elements.caseShell.classList.remove('is-shaking');
   elements.caseShell.classList.add('is-unlocked');
   sound.openCase();
-  elements.caseMessage.textContent = 'HÒM ĐÃ MỞ · GET READY...';
+  elements.caseMessage.textContent = 'HÒM ĐÃ MỞ. SẴN SÀNG...';
   await wait(700);
   await logosReady;
 
   elements.caseShell.hidden = true;
   elements.rouletteWrap.classList.add('is-visible');
   elements.rouletteWrap.setAttribute('aria-hidden', 'false');
-  elements.rouletteStatus.textContent = 'ROLLING...';
+  elements.rouletteStatus.textContent = 'ĐANG QUAY...';
 
   await spinRoulette({
     viewport: elements.rouletteViewport,
@@ -206,11 +207,10 @@ export async function openCase(forcedWinner = null) {
     reducedMotion,
     onTick: (progress) => {
       sound.tick(progress);
-      if (progress > 0.82) elements.rouletteStatus.textContent = 'SLOWING DOWN...';
     }
   });
 
-  elements.rouletteStatus.textContent = 'YOU GOT';
+  elements.rouletteStatus.textContent = 'VẬT PHẨM CỦA BẠN';
   sound.stop();
 
   // Pauses before reveal (Requirement 7)
@@ -234,7 +234,9 @@ export async function openCase(forcedWinner = null) {
 
   // Update recent drop & record global counter
   updateRecentDrop(winner);
-  recordGlobalOpen();
+  if (!isDebugMode) {
+    recordGlobalOpen();
+  }
 
   render(winner.id);
   showResult(winner);
@@ -350,8 +352,7 @@ fetchGitHubStars();
 
 // --- Debug Panel ---
 (function initDebug() {
-  const params = new URLSearchParams(location.search);
-  if (params.get('debug') !== 'true') return;
+  if (!isDebugMode) return;
 
   const panel = document.createElement('div');
   panel.className = 'debug-panel';

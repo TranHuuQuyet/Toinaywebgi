@@ -67,6 +67,12 @@ test('production UI copy avoids the old archive and terminal framing', async () 
   assert.doesNotMatch(source, /WEB ARCHIVE|CLASSIFIED CASE|LIVE DECRYPTION|AUTHENTICATING CASE|TARGET ACQUIRED/);
 });
 
+test('debug openings never call the global counter endpoint', async () => {
+  const source = await readFile('js/app.js', 'utf8');
+  assert.match(source, /const isDebugMode\s*=\s*new URLSearchParams\(location\.search\)\.get\('debug'\) === 'true'/);
+  assert.match(source, /if \(!isDebugMode\)\s*{\s*recordGlobalOpen\(\);\s*}/);
+});
+
 test('all required mechanical sound samples are stored locally', async () => {
   const names = [
     'case-click', 'case-unlock', 'case-open', 'roulette-tick', 'roulette-stop',

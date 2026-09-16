@@ -35,6 +35,15 @@ test('Worker handles CORS preflight OPTIONS correctly', async () => {
   assert.ok(res.headers.get('Access-Control-Allow-Methods').includes('POST'));
 });
 
+test('Worker does not reflect unlisted GitHub Pages origins', async () => {
+  const req = new Request('http://localhost/stats', {
+    method: 'OPTIONS',
+    headers: { 'Origin': 'https://attacker.github.io' }
+  });
+  const res = await worker.fetch(req, { DB: createMockDb() });
+  assert.notEqual(res.headers.get('Access-Control-Allow-Origin'), 'https://attacker.github.io');
+});
+
 test('Worker GET /stats returns current total opens', async () => {
   const req = new Request('http://localhost/stats', {
     method: 'GET',
@@ -67,6 +76,9 @@ test('Worker POST /open-case atomically increments and returns new total', async
   assert.equal(res2.status, 200);
   const data2 = await res2.json();
   assert.equal(data2.totalOpens, 102);
+
+  const res3 = await worker.fetch(req, { DB: db });
+  assert.equal(res3.status, 429);
 });
 
 test('Worker GET /invalid-route returns 404', async () => {
@@ -79,4 +91,3 @@ test('Worker GET /invalid-route returns 404', async () => {
   const res = await worker.fetch(req, { DB: createMockDb() });
   assert.equal(res.status, 404);
 });
-

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090c0e">
-  <meta name="description" content="Tối nay web gì? — mini game mở Web Case và hoàn thành bộ sưu tập.">
+  <meta name="description" content="Tối nay web gì? Mini game mở Web Case và hoàn thành bộ sưu tập.">
   <title>Tối nay web gì?</title>
   <script>try{if(localStorage.getItem('ageConfirmed')==='true')document.documentElement.classList.add('age-confirmed')}catch{}</script>
   <link rel="icon" href="./assets/icons/favicon.svg" type="image/svg+xml">
@@ -15,11 +15,11 @@
   <div class="ambient" aria-hidden="true"></div>
 
   <header class="site-header">
-    <a class="wordmark" href="./index.html" aria-label="Tối nay web gì? — trang chủ">
+    <a class="wordmark" href="./index.html" aria-label="Tối nay web gì? Trang chủ">
       <span>TỐI NAY <b>WEB GÌ?</b></span>
     </a>
     <div class="header-actions">
-      <span class="header-progress"><b id="header-count">0 / 50</b> WEB</span>
+      <span class="header-progress"><b id="header-count">0 / 50</b></span>
       <button class="text-button" id="sound-toggle" type="button" aria-pressed="true">SOUND ON</button>
       <a class="github-badge" id="github-link" href="https://github.com/TranHuuQuyet/Toinaywebgi" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
         <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
@@ -33,9 +33,7 @@
 
   <main id="main">
     <section class="hero" aria-labelledby="case-heading">
-      <span class="game-mode">WEB OPENING</span>
-      <h1 id="case-heading">TỐI NAY <em>NỌ Ở ĐÂU?</em></h1>
-      <p class="hero-copy">Bạn đang ứng và cần nọ mà chưa tìm được web phù hợp?, roll ngay!</p>
+      <h1 id="case-heading">TỐI NAY <em>MỞ GÌ?</em></h1>
 
       <div class="case-stage">
         <div class="case-shell" id="case-shell" aria-hidden="true">
@@ -54,7 +52,7 @@
         </div>
 
         <div class="roulette-wrap" id="roulette-wrap" aria-hidden="true">
-          <div class="roulette-labels"><span>CASE ROLL</span><span id="roulette-status">ROLLING...</span></div>
+          <div class="roulette-labels"><span id="roulette-status">ĐANG QUAY...</span></div>
           <div class="roulette-viewport" id="roulette-viewport">
             <div class="marker" aria-hidden="true"><span></span></div>
             <div class="roulette-track" id="roulette-track"></div>
@@ -67,17 +65,17 @@
           <span>MỞ HÒM</span>
         </button>
         <div class="global-counter" id="global-counter" aria-live="polite">
-          Lượt khai mở: <strong id="global-counter-val">—</strong>
+          Lượt khai mở: <strong id="global-counter-val">...</strong>
         </div>
         <div class="recent-drop hidden" id="recent-drop" aria-live="polite"></div>
-        <p id="case-message" role="status" aria-live="polite">1 HÒM · 1 BRAND MỚI · NỌ KHÔNG TRÙNG</p>
+        <p id="case-message" role="status" aria-live="polite">MỞ HÒM ĐỂ NHẬN MỘT VẬT PHẨM MỚI</p>
       </div>
     </section>
 
     <section class="collection-section" aria-labelledby="collection-heading">
       <div class="section-heading">
-        <div><span class="section-index">BỘ SƯU TẦM NỌ</span><h2 id="collection-heading">ALBUM</h2></div>
-        <div class="total-stat"><strong id="collection-count">0 / 50</strong><span>QUẢ NỌ</span></div>
+        <h2 id="collection-heading">COLLECTION</h2>
+        <div class="total-stat"><strong id="collection-count">0 / 50</strong></div>
       </div>
       <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
       <p class="completion-badge" id="completion-badge" hidden>COLLECTION COMPLETE // 50 OF 50</p>
@@ -85,8 +83,8 @@
     </section>
 
     <section class="reset-zone" aria-labelledby="reset-heading">
-      <div><span class="section-index">COLLECTION OPTIONS</span><h2 id="reset-heading">RESET PROGRESS</h2></div>
-      <button class="danger-button" id="reset-collection" type="button">NỌ NẠI TỪ ĐẦU</button>
+      <h2 id="reset-heading">BẮT ĐẦU LẠI</h2>
+      <button class="danger-button" id="reset-collection" type="button">RESET COLLECTION</button>
     </section>
   </main>
 

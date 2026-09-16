@@ -59,7 +59,7 @@ await send('Runtime.enable');
 await send('Log.enable');
 await send('Page.enable');
 await send('Emulation.setEmulatedMedia', {
-  features: [{ name: 'prefers-reduced-motion', value: 'reduce' }]
+  features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }]
 });
 
 await send('Emulation.setDeviceMetricsOverride', {
@@ -84,19 +84,35 @@ await evaluate("document.querySelector('#sound-toggle').click()");
 const rarityCases = [
   { random: 0, rarity: 'common', heading: 'NEW DISCOVERY' },
   { random: 0.8, rarity: 'rare', heading: 'NEW DISCOVERY' },
+  { random: 0.9, rarity: 'epic', heading: 'EPIC DISCOVERY' },
   { random: 0.96, rarity: 'legendary', heading: 'LEGENDARY DISCOVERY' },
   { random: 0.995, rarity: 'mythic', heading: 'MYTHIC DISCOVERY' }
 ];
-for (const entry of rarityCases) {
+for (const [entryIndex, entry] of rarityCases.entries()) {
   await evaluate(`Math.random = () => ${entry.random}; document.querySelector('#open-case').click()`);
-  await waitFor("document.querySelector('#result-dialog').open === true", 5000);
+  if (entryIndex === 0) {
+    await waitFor("document.querySelector('#roulette-wrap').classList.contains('is-visible')");
+    await screenshot('runtime-roulette.png');
+  }
+  await waitFor("document.querySelector('#result-dialog').open === true", 9000);
   assert.equal(await evaluate(`document.querySelector('#result-panel').classList.contains('rarity-${entry.rarity}')`), true);
   assert.equal(await evaluate("document.querySelector('#result-kicker').textContent"), entry.heading);
   assert.equal(await evaluate(`(() => { const card = document.querySelector('.roulette-card.is-winner').getBoundingClientRect(); const viewport = document.querySelector('#roulette-viewport').getBoundingClientRect(); const marker = viewport.left + viewport.width / 2; return marker > card.left && marker < card.right; })()`), true);
+  if (['epic', 'legendary', 'mythic'].includes(entry.rarity)) {
+    await screenshot(`runtime-${entry.rarity}.png`);
+  }
   await evaluate("document.querySelector('#continue-button').click()");
 }
-assert.equal(await evaluate("JSON.parse(localStorage.getItem('unlockedSites')).length"), 4);
-assert.match(await evaluate("document.querySelector('#collection-count').textContent"), /^4 \/ 50$/);
+
+// Exercise ten complete roulette runs and verify every landing remains exact.
+for (let index = 0; index < 5; index += 1) {
+  await evaluate(`Math.random = () => ${(index + 1) / 10}; document.querySelector('#open-case').click()`);
+  await waitFor("document.querySelector('#result-dialog').open === true", 9000);
+  assert.equal(await evaluate(`(() => { const card = document.querySelector('.roulette-card.is-winner').getBoundingClientRect(); const viewport = document.querySelector('#roulette-viewport').getBoundingClientRect(); const marker = viewport.left + viewport.width / 2; return marker > card.left + card.width * .2 && marker < card.right - card.width * .2; })()`), true);
+  await evaluate("document.querySelector('#continue-button').click()");
+}
+assert.equal(await evaluate("JSON.parse(localStorage.getItem('unlockedSites')).length"), 10);
+assert.match(await evaluate("document.querySelector('#collection-count').textContent"), /^10 \/ 50$/);
 assert.equal(await evaluate("[...document.images].every((image) => image.complete && image.naturalWidth > 0)"), true);
 await evaluate(`(() => { const image = document.querySelector('.collection-card.is-unlocked .brand-mark img'); image.dispatchEvent(new Event('error')); })()`);
 await waitFor("document.querySelector('.collection-card.is-unlocked .brand-mark').classList.contains('is-fallback')");
@@ -132,7 +148,7 @@ await evaluate(`import('./js/data.js').then(({ sites }) => {
 })`);
 await waitFor("document.querySelector('#open-case')?.disabled === true");
 assert.equal(await evaluate("document.querySelector('#open-case span').textContent"), 'COLLECTION COMPLETE');
-assert.match(await evaluate("document.querySelector('#case-message').textContent"), /COLLECTION COMPLETE · 50 \/ 50/);
+assert.match(await evaluate("document.querySelector('#case-message').textContent"), /COLLECTION COMPLETE 50 \/ 50/);
 
 await evaluate("window.confirm = () => true; document.querySelector('#reset-collection').click()");
 assert.equal(await evaluate("localStorage.getItem('unlockedSites')"), null);
@@ -156,8 +172,8 @@ assert.equal(await evaluate("document.querySelector('#result-panel').classList.c
 await evaluate("document.querySelector('#continue-button').click()");
 
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/404.html' });
-await waitFor("document.title.includes('404')");
-assert.ok(['ACCESS DENIED', 'TRANG KHÔNG TỒN TẠI'].includes(await evaluate("document.querySelector('h1').textContent.trim()")));
+await waitFor("document.querySelector('#error-heading') !== null");
+assert.ok(['ACCESS DENIED', 'TRANG KHÔNG TỒN TẠI', 'LỌ ÍT THÔI!'].includes(await evaluate("document.querySelector('h1').textContent.trim()")));
 assert.deepEqual(runtimeErrors, []);
 
 console.log('Browser smoke test passed: age gate, rarity reveals, exact landing, logo fallback, persistence, 360/390/430 layouts, collection, and 404.');

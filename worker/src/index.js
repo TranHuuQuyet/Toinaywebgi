@@ -1,5 +1,5 @@
 /**
- * TỐI NAY WEB GÌ? — Cloudflare Worker Backend (V2.2)
+ * TỐI NAY WEB GÌ? - Cloudflare Worker Backend (V2.2.1)
  *
  * Endpoints:
  * - GET  /stats         : Returns { totalOpens: number }
@@ -27,7 +27,7 @@ const rateLimitMap = new Map();
 
 function getCorsHeaders(request) {
   const origin = request.headers.get('Origin') || '';
-  const isAllowed = ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.github.io');
+  const isAllowed = ALLOWED_ORIGINS.includes(origin);
   return {
     'Access-Control-Allow-Origin': isAllowed ? origin : 'https://tranhuuquyet.github.io',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -51,7 +51,7 @@ function checkRateLimit(request) {
   const ip = request.headers.get('CF-Connecting-IP') || 'anonymous';
   const now = Date.now();
   const windowMs = 10000; // 10 seconds
-  const maxRequests = 12; // Max 12 case opens per 10s per client
+  const maxRequests = 2; // Max 2 case opens per 10s per transient client key
 
   // Simple numeric hash to avoid retaining raw IP
   let hash = 0;
@@ -166,4 +166,3 @@ export default {
     }
   }
 };
-

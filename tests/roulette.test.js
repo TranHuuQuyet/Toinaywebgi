@@ -4,7 +4,8 @@ import { sites } from '../js/data.js';
 import {
   buildRouletteItems,
   calculateLandingTarget,
-  stagedSpinEase,
+  getSpinDuration,
+  smoothDeceleration,
   WINNER_INDEX
 } from '../js/roulette.js';
 
@@ -32,10 +33,31 @@ test('landing target keeps the marker safely inside the winning card', () => {
   }
 });
 
-test('staged spin easing is monotonic and settles more slowly near the target', () => {
-  const samples = Array.from({ length: 101 }, (_, index) => stagedSpinEase(index / 100));
+test('spin easing is one continuous monotonic deceleration curve', () => {
+  const samples = Array.from({ length: 1001 }, (_, index) => smoothDeceleration(index / 1000));
   assert.equal(samples[0], 0);
   assert.equal(samples.at(-1), 1);
   samples.slice(1).forEach((value, index) => assert.ok(value >= samples[index]));
-  assert.ok(samples[50] - samples[40] > samples[100] - samples[90]);
+
+  const velocities = samples.slice(1).map((value, index) => value - samples[index]);
+  velocities.slice(1).forEach((velocity, index) => {
+    assert.ok(velocity <= velocities[index] + 1e-12, `velocity increased at sample ${index + 1}`);
+  });
+  assert.ok(velocities[0] > velocities.at(-1) * 1000);
+});
+
+test('spin duration stays in target range and reduced motion is substantially shorter', () => {
+  assert.equal(getSpinDuration(1440), 5400);
+  assert.equal(getSpinDuration(390), 5100);
+  assert.equal(getSpinDuration(1440, true), 520);
+  assert.ok(getSpinDuration(1440, true) < getSpinDuration(1440) / 5);
+});
+
+test('roulette strip keeps random neighbours around the predetermined winner', () => {
+  const winner = sites.find(({ rarity }) => rarity === 'mythic');
+  let sample = 0;
+  const strip = buildRouletteItems(sites, winner, () => ((sample++ * 17) % sites.length) / sites.length);
+  assert.equal(strip[WINNER_INDEX].id, winner.id);
+  assert.notEqual(strip[WINNER_INDEX - 1].rarity, winner.rarity);
+  assert.notEqual(strip[WINNER_INDEX + 1].rarity, winner.rarity);
 });
