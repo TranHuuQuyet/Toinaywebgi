@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+.DS_Store
+.chrome-cdp/
+.chrome-test/
+desktop.png
+runtime-*.png

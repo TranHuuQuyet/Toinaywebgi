@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 112" role="img" aria-labelledby="title">
+  <title id="title">Brand mark background</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1f2930"/>
+      <stop offset="1" stop-color="#0d1115"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="112" rx="8" fill="url(#g)"/>
+  <path d="M16 27h128M16 85h128" stroke="#c7ff4a" stroke-opacity=".18"/>
+  <path d="M38 16v80M122 16v80" stroke="#fff" stroke-opacity=".05"/>
+</svg>

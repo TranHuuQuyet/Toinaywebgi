@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090c0e">
+  <meta name="description" content="Tối nay web gì? — mini game mở Web Case và hoàn thành bộ sưu tập.">
+  <title>Tối nay web gì?</title>
+  <script>try{if(localStorage.getItem('ageConfirmed')==='true')document.documentElement.classList.add('age-confirmed')}catch{}</script>
+  <link rel="icon" href="./assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Bỏ qua đến nội dung chính</a>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="wordmark" href="./index.html" aria-label="Tối nay web gì? — trang chủ">
+      <span class="wordmark-signal" aria-hidden="true"></span>
+      <span>TỐI NAY <b>WEB GÌ?</b></span>
+    </a>
+    <div class="header-actions">
+      <span class="header-progress"><b id="header-count">0 / 50</b> UNLOCKED</span>
+      <button class="text-button" id="sound-toggle" type="button" aria-pressed="true">SOUND ON</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="case-heading">
+      <div class="eyebrow"><span>ARCHIVE // 001</span><span>STATUS: ACTIVE</span></div>
+      <h1 id="case-heading">WHAT WILL YOU<br><em>DISCOVER?</em></h1>
+      <p class="hero-copy">Mở một Web Case. Săn sáu cấp độ hiếm. Hoàn thành kho lưu trữ gồm 50 biểu tượng của internet.</p>
+
+      <div class="case-stage">
+        <div class="case-shell" id="case-shell" aria-hidden="true">
+          <div class="case-corner corner-tl"></div><div class="case-corner corner-tr"></div>
+          <div class="case-corner corner-bl"></div><div class="case-corner corner-br"></div>
+          <div class="case-topline"><span>W/A</span><span>SECURE CONTAINER</span><span>01</span></div>
+          <div class="case-core">
+            <span class="case-kicker">WEB ARCHIVE</span>
+            <div class="case-glyph">?</div>
+            <strong>CLASSIFIED CASE</strong>
+            <small>50 RECORDS // NO EXTERNAL ACCESS</small>
+          </div>
+          <div class="case-seal"><span></span>LOCKED</div>
+        </div>
+
+        <div class="roulette-wrap" id="roulette-wrap" aria-hidden="true">
+          <div class="roulette-labels"><span>LIVE DECRYPTION</span><span id="roulette-status">SCANNING</span></div>
+          <div class="roulette-viewport" id="roulette-viewport">
+            <div class="marker" aria-hidden="true"><span></span></div>
+            <div class="roulette-track" id="roulette-track"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="case-controls">
+        <button class="primary-button" id="open-case" type="button">
+          <span>OPEN CASE</span><span class="button-code">[ ENTER ]</span>
+        </button>
+        <p id="case-message" role="status" aria-live="polite">1 CASE · 1 NEW DISCOVERY · NO DUPLICATES</p>
+      </div>
+    </section>
+
+    <section class="collection-section" aria-labelledby="collection-heading">
+      <div class="section-heading">
+        <div><span class="section-index">02 / ARCHIVE</span><h2 id="collection-heading">WEB COLLECTION</h2></div>
+        <div class="total-stat"><strong id="collection-count">0 / 50</strong><span>DISCOVERED</span></div>
+      </div>
+      <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
+      <div id="collection" class="collection" aria-live="polite"></div>
+    </section>
+
+    <section class="reset-zone" aria-labelledby="reset-heading">
+      <div><span class="section-index">SYSTEM / MAINTENANCE</span><h2 id="reset-heading">ARCHIVE CONTROLS</h2></div>
+      <button class="danger-button" id="reset-collection" type="button">RESET COLLECTION</button>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Tối nay web gì?</strong> — A parody randomizer &amp; collection project.</p>
+    <p>No external adult links are provided. Brand names belong to their respective owners.</p>
+    <button class="footer-button" id="reset-age" type="button">RESET AGE CONFIRMATION</button>
+  </footer>
+
+  <div class="age-gate" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title">
+    <div class="age-panel">
+      <span class="age-number">18+</span>
+      <span class="section-index">CONTENT PROTOCOL</span>
+      <h2 id="age-title">TỐI NAY WEB GÌ?</h2>
+      <p>Đây là một mini game random / collection.</p>
+      <p>Website không lưu trữ, phát hoặc chuyển hướng người dùng tới nội dung người lớn.</p>
+      <button class="primary-button" id="confirm-age" type="button">TÔI ĐÃ 18+</button>
+      <small>By continuing, you confirm that you are at least 18 years old.</small>
+    </div>
+  </div>
+
+  <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title">
+    <div class="result-panel" id="result-panel">
+      <button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button>
+      <span class="result-kicker" id="result-kicker">NEW DISCOVERY</span>
+      <h2 id="result-title">YOU UNLOCKED</h2>
+      <div class="result-mark brand-mark"><img id="result-logo" src="./assets/logos/brand-placeholder.svg" alt=""><span id="result-initials"></span></div>
+      <strong class="result-name" id="result-name"></strong>
+      <span class="result-rarity" id="result-rarity"></span>
+      <div class="result-actions">
+        <a class="secondary-button" href="./404.html">VIEW ITEM</a>
+        <button class="primary-button compact" id="continue-button" type="button">CONTINUE</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="screen-flash" id="screen-flash" aria-hidden="true"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
