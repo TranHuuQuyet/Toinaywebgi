@@ -1,6 +1,6 @@
-# Tối nay web gì? — V2.3
+# Tối nay web gì? — V2.3.1
 
-Mini game mở hòm và sưu tập 50 vật phẩm, viết bằng HTML, CSS và JavaScript thuần. V2.3 tổ chức toàn bộ trải nghiệm trong một game shell cố định, ưu tiên cảm giác nhanh, gọn và rõ như một game inventory thực thụ.
+Mini game mở hòm và sưu tập 50 vật phẩm, viết bằng HTML, CSS và JavaScript thuần. V2.3.1 hoàn thiện game shell cố định bằng các chỉnh sửa về crate opening, reward presentation, copy và GitHub stars fallback.
 
 Dự án chỉ lưu metadata an toàn và logo cục bộ. Không item nào chứa URL đích và không có liên kết ra website nội dung người lớn.
 
@@ -12,7 +12,7 @@ Giao diện có ba màn hình, chuyển tại chỗ trong khoảng 150–250 ms:
 - **COLLECTION** — inventory 50 slot theo thứ tự cố định; slot khóa hiển thị `? / UNKNOWN`, slot đã mở chỉ dẫn tới trang 404 nội bộ.
 - **INFO** — hướng dẫn, tỷ lệ rarity, thông tin lưu trữ/quyền sở hữu và các thao tác reset.
 
-HUD trên cùng hiển thị tiến độ, âm thanh và GitHub stars. Thanh điều hướng dưới cùng luôn nằm trong viewport, hỗ trợ click, bàn phím mũi tên, Home/End, safe area trên thiết bị di động và trạng thái `aria-selected`.
+HUD trên cùng hiển thị tiến độ, âm thanh và GitHub stars. Khi Worker chưa cấu hình hoặc endpoint stars lỗi, frontend đọc `stargazers_count` trực tiếp từ GitHub API; nếu cả hai nguồn đều lỗi, badge hiển thị `GitHub ↗`. Thanh điều hướng dưới cùng luôn nằm trong viewport, hỗ trợ click, bàn phím mũi tên, Home/End, safe area trên thiết bị di động và trạng thái `aria-selected`.
 
 ## Luật mở hòm
 
@@ -46,7 +46,7 @@ Cloudflare Worker trong `worker/` cung cấp:
 - `GET /github-stars` — stars của repository với cache;
 - CORS allowlist và rate limit 2 lượt mở / 10 giây / IP.
 
-Frontend vẫn hoạt động đầy đủ khi backend chưa cấu hình. `API_BASE_URL` hiện để trống trong `js/config.js`, vì vậy repository này **chưa khai báo một Worker production đã deploy**. Sau khi tự deploy Worker theo `worker/README.md`, điền URL thật vào hằng số đó.
+Frontend vẫn hoạt động đầy đủ khi backend chưa cấu hình. GitHub stars dùng GitHub API trực tiếp làm fallback, nhưng global case-open counter luôn là Worker-only và tiếp tục hiển thị `...` khi không có backend. `API_BASE_URL` hiện để trống trong `js/config.js`, vì vậy repository này **chưa khai báo một Worker production đã deploy**. Sau khi tự deploy Worker theo `worker/README.md`, điền URL thật vào hằng số đó.
 
 ## Chạy local
 

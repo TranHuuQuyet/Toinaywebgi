@@ -6,7 +6,7 @@ import { spinRoulette } from './roulette.js';
 import { SoundManager } from './sound.js';
 import { preloadLogos, setBrandMark } from './logo.js';
 import { ParticleEngine } from './particles.js';
-import { API_BASE_URL } from './config.js';
+import { API_BASE_URL, GITHUB_REPO } from './config.js';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -164,18 +164,35 @@ async function recordGlobalOpen() {
 
 async function fetchGitHubStars() {
   if (!elements.githubStars) return;
-  if (!API_BASE_URL) {
-    elements.githubStars.textContent = '↗';
-    return;
-  }
+  let stars = null;
+
   try {
-    const response = await fetch(`${API_BASE_URL}/github-stars`);
-    if (!response.ok) throw new Error('GitHub stars API error');
-    const data = await response.json();
-    elements.githubStars.textContent = typeof data.stars === 'number' ? `★ ${data.stars}` : '↗';
+    if (API_BASE_URL) {
+      const response = await fetch(`${API_BASE_URL}/github-stars`);
+      if (response.ok) {
+        const data = await response.json();
+        if (Number.isInteger(data.stars) && data.stars >= 0) stars = data.stars;
+      }
+    }
   } catch {
-    elements.githubStars.textContent = '↗';
+    // The public GitHub API below remains available as a safe fallback.
   }
+
+  if (stars === null) {
+    try {
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (Number.isInteger(data.stargazers_count) && data.stargazers_count >= 0) {
+          stars = data.stargazers_count;
+        }
+      }
+    } catch {
+      // The compact outbound-link fallback is set below.
+    }
+  }
+
+  elements.githubStars.textContent = stars === null ? '↗' : `★ ${stars}`;
 }
 
 export async function openCase(forcedWinner = null) {
@@ -277,9 +294,10 @@ function showResult(winner) {
   elements.resultDialog.showModal();
   particles.explode(winner.rarity);
   const actionDelay = { epic: 400, legendary: 600, mythic: 800 }[winner.rarity] || 0;
+  const cinematicReward = winner.rarity === 'legendary' || winner.rarity === 'mythic';
   elements.continueButton.disabled = actionDelay > 0;
   if (actionDelay) {
-    elements.closeResult.focus();
+    (cinematicReward ? elements.resultPanel : elements.closeResult).focus();
     resultActionTimer = setTimeout(() => {
       elements.continueButton.disabled = false;
       resultActionTimer = null;
@@ -350,6 +368,7 @@ elements.closeResult.addEventListener('click', closeResult);
 elements.continueButton.addEventListener('click', closeResult);
 elements.resultDialog.addEventListener('cancel', (event) => {
   event.preventDefault();
+  if (state.currentWinner?.rarity === 'legendary' || state.currentWinner?.rarity === 'mythic') return;
   closeResult();
 });
 

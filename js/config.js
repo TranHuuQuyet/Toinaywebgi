@@ -1,5 +1,5 @@
 /**
- * TỐI NAY WEB GÌ? — Configuration (V2.3)
+ * TỐI NAY WEB GÌ? — Configuration (V2.3.1)
  */
 
 // Cloudflare Worker URL for global counter and GitHub stars cache.

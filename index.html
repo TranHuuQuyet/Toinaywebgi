@@ -48,14 +48,14 @@
       </section>
 
       <section class="game-screen collection-screen" id="screen-collection" data-screen-panel="collection" role="tabpanel" aria-labelledby="collection-heading" aria-hidden="true" inert>
-        <div class="screen-header"><div><span class="eyebrow">INVENTORY // LOCAL</span><h2 id="collection-heading" tabindex="-1">COLLECTION</h2></div><strong class="screen-stat" id="collection-count">0 / 50</strong></div>
+        <div class="screen-header"><div><span class="eyebrow">INVENTORY</span><h2 id="collection-heading" tabindex="-1">COLLECTION</h2></div><strong class="screen-stat" id="collection-count">0 / 50</strong></div>
         <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
         <p class="completion-badge" id="completion-badge" hidden>COLLECTION COMPLETE // 50 OF 50</p>
         <div class="inventory-scroll"><div id="collection" class="collection" aria-live="polite"></div></div>
       </section>
 
       <section class="game-screen info-screen" id="screen-info" data-screen-panel="info" role="tabpanel" aria-labelledby="info-heading" aria-hidden="true" inert>
-        <div class="screen-header"><div><span class="eyebrow">SYSTEM // V2.3</span><h2 id="info-heading" tabindex="-1">INFO</h2></div></div>
+        <div class="screen-header"><div><h2 id="info-heading" tabindex="-1">INFO</h2></div></div>
         <div class="info-layout">
           <section class="info-block" aria-labelledby="about-heading"><span class="info-index">01</span><div><h3 id="about-heading">CÁCH CHƠI</h3><p>Mở hòm để nhận một vật phẩm chưa có trong inventory. Mỗi lần mở được lưu ngay trên thiết bị này; không có liên kết ra website của vật phẩm.</p></div></section>
           <section class="info-block" aria-labelledby="odds-heading"><span class="info-index">02</span><div class="odds-content"><h3 id="odds-heading">TỶ LỆ GỐC</h3><dl class="odds-grid"><div><dt>COMMON</dt><dd>45%</dd></div><div><dt>UNCOMMON</dt><dd>25%</dd></div><div><dt>RARE</dt><dd>15%</dd></div><div><dt>EPIC</dt><dd>9%</dd></div><div><dt>LEGENDARY</dt><dd>5%</dd></div><div><dt>MYTHIC</dt><dd>1%</dd></div></dl><p>Khi một bậc đã hết vật phẩm, xác suất được phân phối lại cho các bậc còn lại.</p></div></section>
@@ -72,8 +72,8 @@
     </nav>
   </div>
 
-  <div class="age-gate" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title"><div class="age-panel"><span class="age-number">18+</span><span class="eyebrow">ACCESS CHECK</span><h2 id="age-title">TỐI NAY WEB GÌ?</h2><p>Đây là mini game random / collection. Không lưu trữ hoặc chuyển hướng tới nội dung người lớn.</p><button class="primary-button" id="confirm-age" type="button">TÔI ĐÃ 18+</button><small>By continuing, you confirm that you are at least 18 years old.</small></div></div>
-  <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title"><canvas class="reveal-canvas" id="reveal-canvas" aria-hidden="true"></canvas><div class="result-panel" id="result-panel"><div class="result-rays" aria-hidden="true"></div><button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button><span class="result-kicker" id="result-kicker">NEW DISCOVERY</span><h2 id="result-title">BẠN ĐÃ MỞ KHÓA</h2><div class="result-mark brand-mark"><img id="result-logo" alt=""><span class="brand-fallback" id="result-initials"></span></div><strong class="result-name" id="result-name"></strong><span class="result-rarity" id="result-rarity"></span><div class="result-actions"><a class="secondary-button" href="./404.html">VIEW ITEM</a><button class="primary-button compact" id="continue-button" type="button">CONTINUE</button></div></div></dialog>
+  <div class="age-gate" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title"><div class="age-panel"><span class="age-number">18+</span><h2 id="age-title">TỐI NAY WEB GÌ?</h2><p>Đây là mini game random / collection.<br>Không lưu trữ hoặc chuyển hướng tới nội dung người lớn.</p><button class="primary-button" id="confirm-age" type="button">TÔI ĐÃ 18+</button></div></div>
+  <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title"><canvas class="reveal-canvas" id="reveal-canvas" aria-hidden="true"></canvas><div class="result-panel" id="result-panel" tabindex="-1"><div class="result-rays" aria-hidden="true"></div><button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button><span class="result-kicker" id="result-kicker">NEW DISCOVERY</span><h2 id="result-title">BẠN ĐÃ MỞ KHÓA</h2><div class="result-mark brand-mark"><img id="result-logo" alt=""><span class="brand-fallback" id="result-initials"></span></div><strong class="result-name" id="result-name"></strong><span class="result-rarity" id="result-rarity"></span><div class="result-actions"><a class="secondary-button" href="./404.html">VIEW ITEM</a><button class="primary-button compact" id="continue-button" type="button">CONTINUE</button></div></div></dialog>
   <div class="screen-flash" id="screen-flash" aria-hidden="true"></div>
   <script type="module" src="./js/app.js"></script>
 </body>

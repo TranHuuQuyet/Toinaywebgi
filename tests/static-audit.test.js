@@ -87,6 +87,30 @@ test('404 page uses the V2.3 access-denied identity and returns to the game', as
   assert.doesNotMatch(html, /LỌ ÍT THÔI|DM lọ/i);
 });
 
+test('V2.3.1 keeps GitHub stars live without making the global counter local', async () => {
+  const source = await readFile('js/app.js', 'utf8');
+
+  assert.match(source, /https:\/\/api\.github\.com\/repos\/\$\{GITHUB_REPO\}/);
+  assert.match(source, /stargazers_count/);
+  assert.match(source, /async function fetchGlobalOpens\(\)[\s\S]*?if \(!API_BASE_URL\)[\s\S]*?textContent = '\.\.\.'/);
+  assert.match(source, /async function recordGlobalOpen\(\)[\s\S]*?if \(!API_BASE_URL\) return/);
+  assert.doesNotMatch(source, /setItem\([^)]*(?:global|totalOpens|counter)/i);
+});
+
+test('V2.3.1 removes internal-facing labels and clearly opens the crate lid', async () => {
+  const html = await readFile('index.html', 'utf8');
+  const css = await readFile('css/style.css', 'utf8');
+
+  assert.doesNotMatch(html, /SYSTEM \/\/ V2\.3|INVENTORY \/\/ LOCAL|ACCESS CHECK/);
+  assert.match(css, /\.case-shell\.is-unlocked \.crate-lid[^}]*rotateX\(-(?:6[5-9]|7\d|8[0-5])deg\)/);
+});
+
+test('Legendary and Mythic rewards hide the dialog close control', async () => {
+  const css = await readFile('css/style.css', 'utf8');
+  assert.match(css, /\.reveal-legendary \.dialog-close[^}]*display:\s*none/);
+  assert.match(css, /\.reveal-mythic \.dialog-close[^}]*display:\s*none/);
+});
+
 test('debug openings never call the global counter endpoint', async () => {
   const source = await readFile('js/app.js', 'utf8');
   assert.match(source, /const isDebugMode\s*=\s*new URLSearchParams\(location\.search\)\.get\('debug'\) === 'true'/);

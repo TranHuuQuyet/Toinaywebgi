@@ -22,6 +22,18 @@ socket.addEventListener('message', ({ data }) => {
     return message.error ? reject(new Error(message.error.message)) : resolve(message.result);
   }
   if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params.exceptionDetails.text);
+  if (message.method === 'Fetch.requestPaused') {
+    const payload = Buffer.from(JSON.stringify({ stargazers_count: 123 }), 'utf8').toString('base64');
+    void send('Fetch.fulfillRequest', {
+      requestId: message.params.requestId,
+      responseCode: 200,
+      responseHeaders: [
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Access-Control-Allow-Origin', value: '*' }
+      ],
+      body: payload
+    }).catch((error) => runtimeErrors.push(error.message));
+  }
   if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
     if (!message.params.entry.text.includes('ERR_CACHE_READ_FAILURE')) {
       runtimeErrors.push(message.params.entry.text);
@@ -58,17 +70,23 @@ async function screenshot(path) {
 await send('Runtime.enable');
 await send('Log.enable');
 await send('Page.enable');
+await send('Network.enable');
+await send('Network.setCacheDisabled', { cacheDisabled: true });
+await send('Fetch.enable', {
+  patterns: [{ urlPattern: 'https://api.github.com/repos/TranHuuQuyet/Toinaywebgi', requestStage: 'Request' }]
+});
 await send('Emulation.setEmulatedMedia', {
   features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }]
 });
 
 await send('Emulation.setDeviceMetricsOverride', {
-  width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false
+  width: 1440, height: 900, deviceScaleFactor: 1, mobile: false
 });
 await evaluate("localStorage.clear()");
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/index.html' });
 await waitFor("document.readyState === 'complete'");
 await waitFor("document.querySelector('#age-gate') !== null");
+await waitFor("document.querySelector('#github-stars').textContent === '★ 123'");
 assert.equal(await evaluate("document.querySelector('#age-gate').classList.contains('is-dismissed')"), false);
 await evaluate("document.querySelector('#confirm-age').click()");
 assert.equal(await evaluate("localStorage.getItem('ageConfirmed')"), 'true');
@@ -114,6 +132,12 @@ const rarityCases = [
 for (const [entryIndex, entry] of rarityCases.entries()) {
   await evaluate(`Math.random = () => ${entry.random}; document.querySelector('#open-case').click()`);
   if (entryIndex === 0) {
+    await waitFor("document.querySelector('#case-shell').classList.contains('is-unlocked')");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    assert.equal(await evaluate("document.querySelector('#case-shell').hidden"), false);
+    const openLightOpacity = await evaluate("Number.parseFloat(getComputedStyle(document.querySelector('.crate-light')).opacity)");
+    assert.ok(openLightOpacity >= 0.65, `open crate light opacity: ${openLightOpacity}`);
+    await screenshot('runtime-case-open.png');
     await waitFor("document.querySelector('#roulette-wrap').classList.contains('is-visible')");
     await screenshot('runtime-roulette.png');
   }
@@ -125,6 +149,14 @@ for (const [entryIndex, entry] of rarityCases.entries()) {
   if (['epic', 'legendary', 'mythic'].includes(entry.rarity)) {
     assert.equal(await evaluate("document.querySelector('#continue-button').disabled"), true);
     await screenshot(`runtime-${entry.rarity}.png`);
+  }
+  if (['legendary', 'mythic'].includes(entry.rarity)) {
+    assert.equal(await evaluate("getComputedStyle(document.querySelector('#close-result')).display"), 'none');
+    assert.equal(await evaluate("document.activeElement.id"), 'result-panel');
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    assert.equal(await evaluate("document.querySelector('#result-dialog').open"), true);
   }
   await waitFor("document.querySelector('#continue-button').disabled === false");
   await evaluate("document.querySelector('#continue-button').click()");
@@ -149,7 +181,7 @@ await send('Emulation.setDeviceMetricsOverride', {
   width: 1366, height: 768, deviceScaleFactor: 1, mobile: false
 });
 await send('Page.reload', { ignoreCache: true });
-await waitFor("document.readyState === 'complete'");
+await waitFor("document.readyState !== 'loading'");
 assert.equal(await evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), true);
 await screenshot('runtime-laptop.png');
 
@@ -158,7 +190,7 @@ for (const width of [360, 390, 430]) {
     width, height: 844, deviceScaleFactor: 1, mobile: true
   });
   await send('Page.reload', { ignoreCache: true });
-  await waitFor("document.readyState === 'complete'");
+  await waitFor("document.readyState !== 'loading'");
   await waitFor("document.querySelectorAll('.collection-card').length === 50");
   const overflow = await evaluate(`JSON.stringify([...document.querySelectorAll('*')]
     .filter((element) => element.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
@@ -167,6 +199,7 @@ for (const width of [360, 390, 430]) {
   assert.equal(await evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), true, `${width}px: ${overflow}`);
   assert.equal(await evaluate("document.querySelector('#age-gate').classList.contains('is-dismissed')"), true);
   await evaluate("document.querySelector('[data-screen-target=collection]').click()");
+  await new Promise((resolve) => setTimeout(resolve, 260));
   assert.equal(await evaluate("getComputedStyle(document.querySelector('.collection-grid')).gridTemplateColumns.split(' ').length"), width <= 480 ? 3 : 5);
   assert.equal(await evaluate("document.querySelector('.game-nav').getBoundingClientRect().bottom <= innerHeight + 1"), true);
   if (width === 390) await screenshot('runtime-mobile-390.png');
@@ -189,6 +222,7 @@ assert.equal(await evaluate("document.querySelector('#collection-count').textCon
 // Check GitHub badge & global counter
 assert.equal(await evaluate("document.querySelector('#github-link').getAttribute('href')"), 'https://github.com/TranHuuQuyet/Toinaywebgi');
 assert.equal(await evaluate("document.querySelector('#github-link').getAttribute('target')"), '_blank');
+assert.equal(await evaluate("document.querySelector('#global-counter-val').textContent"), '...');
 assert.ok(await evaluate("document.querySelector('#global-counter').textContent.includes('Lượt khai mở:')"));
 assert.ok(await evaluate("document.querySelector('#reveal-canvas') !== null"));
 
@@ -197,12 +231,18 @@ await send('Page.navigate', { url: 'http://127.0.0.1:4173/index.html?debug=true'
 await waitFor("document.querySelector('.debug-panel') !== null");
 assert.equal(await evaluate("document.querySelector('.debug-panel') !== null"), true);
 
-// Test force rarity via debug button
-await evaluate("document.querySelector('.debug-panel button:nth-child(7)').click()"); // MYTHIC is the 6th rarity button (index 7 in panel with title)
-await waitFor("document.querySelector('#result-dialog').open === true", 8000);
-assert.equal(await evaluate("document.querySelector('#result-panel').classList.contains('rarity-mythic')"), true);
-await waitFor("document.querySelector('#continue-button').disabled === false");
-await evaluate("document.querySelector('#continue-button').click()");
+// Test the three elevated reveal tiers through their dedicated debug controls.
+for (const entry of [
+  { child: 5, rarity: 'epic' },
+  { child: 6, rarity: 'legendary' },
+  { child: 7, rarity: 'mythic' }
+]) {
+  await evaluate(`document.querySelector('.debug-panel button:nth-child(${entry.child})').click()`);
+  await waitFor("document.querySelector('#result-dialog').open === true", 10000);
+  assert.equal(await evaluate(`document.querySelector('#result-panel').classList.contains('rarity-${entry.rarity}')`), true);
+  await waitFor("document.querySelector('#continue-button').disabled === false");
+  await evaluate("document.querySelector('#continue-button').click()");
+}
 
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/404.html' });
 await waitFor("document.querySelector('#error-heading') !== null");
