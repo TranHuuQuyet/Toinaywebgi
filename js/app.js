@@ -6,9 +6,10 @@ import { spinRoulette } from './roulette.js';
 import { SoundManager } from './sound.js';
 import { preloadLogos, setBrandMark } from './logo.js';
 import { ParticleEngine } from './particles.js';
-import { API_BASE_URL, GITHUB_REPO, GITHUB_REPO_URL } from './config.js';
+import { API_BASE_URL } from './config.js';
 
 const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
 const isDebugMode = new URLSearchParams(location.search).get('debug') === 'true';
 const validIds = new Set(sites.map(({ id }) => id));
 const state = {
@@ -19,6 +20,7 @@ const state = {
 };
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sound = new SoundManager(state.soundEnabled);
+let resultActionTimer = null;
 
 const elements = {
   ageGate: $('#age-gate'), confirmAge: $('#confirm-age'), resetAge: $('#reset-age'),
@@ -34,16 +36,36 @@ const elements = {
   resultInitials: $('#result-initials'), resultName: $('#result-name'),
   resultRarity: $('#result-rarity'), closeResult: $('#close-result'),
   continueButton: $('#continue-button'), screenFlash: $('#screen-flash'),
-  resultParticles: $('#result-particles'),
   revealCanvas: $('#reveal-canvas'),
   globalCounterVal: $('#global-counter-val'),
   recentDrop: $('#recent-drop'),
   githubStars: $('#github-stars'),
-  githubLink: $('#github-link')
+  githubLink: $('#github-link'),
+  gameShell: $('#game-shell'),
+  screenButtons: $$('[data-screen-target]'),
+  screenPanels: $$('[data-screen-panel]')
 };
 
 const particles = new ParticleEngine(elements.revealCanvas);
 particles.setReducedMotion(reducedMotion);
+
+function setActiveScreen(name) {
+  if (state.isOpening || !elements.screenPanels.some((panel) => panel.dataset.screenPanel === name)) return;
+  elements.gameShell.dataset.activeScreen = name;
+
+  elements.screenPanels.forEach((panel) => {
+    const active = panel.dataset.screenPanel === name;
+    panel.classList.toggle('is-active', active);
+    panel.setAttribute('aria-hidden', String(!active));
+    panel.inert = !active;
+  });
+
+  elements.screenButtons.forEach((button) => {
+    const active = button.dataset.screenTarget === name;
+    button.setAttribute('aria-selected', String(active));
+    button.tabIndex = active ? 0 : -1;
+  });
+}
 
 function updateSoundButton() {
   elements.soundToggle.textContent = `SOUND ${state.soundEnabled ? 'ON' : 'OFF'}`;
@@ -74,6 +96,9 @@ function setOpening(opening) {
   state.isOpening = opening;
   elements.openCase.disabled = opening || state.unlockedSites.length === sites.length;
   document.body.classList.toggle('is-opening', opening);
+  elements.screenButtons.forEach((button) => {
+    button.disabled = opening;
+  });
 }
 
 function wait(ms) {
@@ -139,31 +164,15 @@ async function recordGlobalOpen() {
 
 async function fetchGitHubStars() {
   if (!elements.githubStars) return;
+  if (!API_BASE_URL) {
+    elements.githubStars.textContent = '↗';
+    return;
+  }
   try {
-    let stars = null;
-    if (API_BASE_URL) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/github-stars`);
-        if (res.ok) {
-          const data = await res.json();
-          if (typeof data.stars === 'number') stars = data.stars;
-        }
-      } catch {
-        // Fallback to direct github API
-      }
-    }
-    if (stars === null) {
-      const ghRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`);
-      if (ghRes.ok) {
-        const ghData = await ghRes.json();
-        if (typeof ghData.stargazers_count === 'number') stars = ghData.stargazers_count;
-      }
-    }
-    if (stars !== null) {
-      elements.githubStars.textContent = `★ ${stars}`;
-    } else {
-      elements.githubStars.textContent = '↗';
-    }
+    const response = await fetch(`${API_BASE_URL}/github-stars`);
+    if (!response.ok) throw new Error('GitHub stars API error');
+    const data = await response.json();
+    elements.githubStars.textContent = typeof data.stars === 'number' ? `★ ${data.stars}` : '↗';
   } catch {
     elements.githubStars.textContent = '↗';
   }
@@ -261,20 +270,29 @@ function showResult(winner) {
   };
   elements.resultKicker.textContent = headings[winner.rarity] || 'NEW DISCOVERY';
 
-  const particleCount = { common: 0, uncommon: 4, rare: 8, epic: 12, legendary: 20, mythic: 28 }[winner.rarity];
-  elements.resultParticles.innerHTML = Array.from({ length: particleCount }, (_, index) =>
-    `<i style="--i:${index};--x:${(index * 47) % 100}%;--d:${(index % 7) * 70}ms"></i>`).join('');
-
   setBrandMark(elements.resultPanel.querySelector('.result-mark'), winner);
   elements.resultName.textContent = winner.name;
   elements.resultRarity.textContent = RARITY_CONFIG[winner.rarity].label;
 
   elements.resultDialog.showModal();
   particles.explode(winner.rarity);
-  elements.continueButton.focus();
+  const actionDelay = { epic: 400, legendary: 600, mythic: 800 }[winner.rarity] || 0;
+  elements.continueButton.disabled = actionDelay > 0;
+  if (actionDelay) {
+    elements.closeResult.focus();
+    resultActionTimer = setTimeout(() => {
+      elements.continueButton.disabled = false;
+      resultActionTimer = null;
+    }, reducedMotion ? 100 : actionDelay);
+  } else {
+    elements.continueButton.focus();
+  }
 }
 
 function closeResult() {
+  clearTimeout(resultActionTimer);
+  resultActionTimer = null;
+  elements.continueButton.disabled = false;
   particles.stop();
   elements.resultDialog.close();
   document.body.className = document.body.className.replace(/\bis-revealing-\S+/g, '').trim();
@@ -307,6 +325,23 @@ elements.soundToggle.addEventListener('click', () => {
 
 elements.openCase.addEventListener('click', () => openCase());
 
+elements.screenButtons.forEach((button, index) => {
+  button.addEventListener('click', () => setActiveScreen(button.dataset.screenTarget));
+  button.addEventListener('keydown', (event) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (!keys.includes(event.key)) return;
+    event.preventDefault();
+    let nextIndex = index;
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + elements.screenButtons.length) % elements.screenButtons.length;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % elements.screenButtons.length;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = elements.screenButtons.length - 1;
+    const next = elements.screenButtons[nextIndex];
+    setActiveScreen(next.dataset.screenTarget);
+    next.focus();
+  });
+});
+
 document.querySelectorAll('button, a').forEach((control) => {
   control.addEventListener('pointerenter', () => sound.hover());
 });
@@ -324,7 +359,7 @@ elements.resetCollection.addEventListener('click', () => {
   state.unlockedSites = [];
   renderRecentDrop(null);
   render();
-  scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+  setActiveScreen('case');
 });
 
 elements.resetAge.addEventListener('click', () => {
@@ -345,6 +380,7 @@ if (storage.isAgeConfirmed()) {
 }
 
 updateSoundButton();
+setActiveScreen('case');
 render();
 renderRecentDrop(storage.getRecentDrop());
 fetchGlobalOpens();

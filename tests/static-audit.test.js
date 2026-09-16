@@ -67,6 +67,26 @@ test('production UI copy avoids the old archive and terminal framing', async () 
   assert.doesNotMatch(source, /WEB ARCHIVE|CLASSIFIED CASE|LIVE DECRYPTION|AUTHENTICATING CASE|TARGET ACQUIRED/);
 });
 
+test('V2.3 uses a three-screen game shell with no document footer', async () => {
+  const html = await readFile('index.html', 'utf8');
+
+  assert.match(html, /class=["'][^"']*game-shell/);
+  for (const screen of ['case', 'collection', 'info']) {
+    assert.match(html, new RegExp(`data-screen-panel=["']${screen}["']`));
+    assert.match(html, new RegExp(`data-screen-target=["']${screen}["']`));
+  }
+  assert.doesNotMatch(html, /<footer\b/i);
+  assert.doesNotMatch(html, /đạp quả nọ ngay/i);
+});
+
+test('404 page uses the V2.3 access-denied identity and returns to the game', async () => {
+  const html = await readFile('404.html', 'utf8');
+  assert.match(html, />\s*404\s*</i);
+  assert.match(html, /ACCESS DENIED|NOT AVAILABLE/i);
+  assert.match(html, /href=["']\.\/index\.html["']/);
+  assert.doesNotMatch(html, /LỌ ÍT THÔI|DM lọ/i);
+});
+
 test('debug openings never call the global counter endpoint', async () => {
   const source = await readFile('js/app.js', 'utf8');
   assert.match(source, /const isDebugMode\s*=\s*new URLSearchParams\(location\.search\)\.get\('debug'\) === 'true'/);

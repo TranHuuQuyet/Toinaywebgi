@@ -2,9 +2,9 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090c0e">
-  <meta name="description" content="Tối nay web gì? Mini game mở Web Case và hoàn thành bộ sưu tập.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080a0c">
+  <meta name="description" content="Tối nay web gì? Mini game mở Web Case và hoàn thành bộ sưu tập 50 vật phẩm.">
   <title>Tối nay web gì?</title>
   <script>try{if(localStorage.getItem('ageConfirmed')==='true')document.documentElement.classList.add('age-confirmed')}catch{}</script>
   <link rel="icon" href="./assets/icons/favicon.svg" type="image/svg+xml">
@@ -13,115 +13,67 @@
 <body>
   <a class="skip-link" href="#main">Bỏ qua đến nội dung chính</a>
   <div class="ambient" aria-hidden="true"></div>
+  <div class="game-shell" id="game-shell" data-active-screen="case">
+    <header class="site-header">
+      <a class="wordmark" href="./index.html" aria-label="Tối nay web gì? Màn hình Case"><span class="wordmark-signal" aria-hidden="true"></span><span>TỐI NAY <b>WEB GÌ?</b></span></a>
+      <div class="header-actions">
+        <span class="header-progress" aria-label="Tiến độ bộ sưu tập"><b id="header-count">0 / 50</b></span>
+        <button class="text-button" id="sound-toggle" type="button" aria-pressed="true">SOUND ON</button>
+        <a class="github-badge" id="github-link" href="https://github.com/TranHuuQuyet/Toinaywebgi" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository"><svg class="github-icon" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span class="github-label">GitHub</span><span class="github-stars" id="github-stars">★ ...</span></a>
+      </div>
+    </header>
 
-  <header class="site-header">
-    <a class="wordmark" href="./index.html" aria-label="Tối nay web gì? Trang chủ">
-      <span>TỐI NAY <b>WEB GÌ?</b></span>
-    </a>
-    <div class="header-actions">
-      <span class="header-progress"><b id="header-count">0 / 50</b></span>
-      <button class="text-button" id="sound-toggle" type="button" aria-pressed="true">SOUND ON</button>
-      <a class="github-badge" id="github-link" href="https://github.com/TranHuuQuyet/Toinaywebgi" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
-        <svg class="github-icon" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-        </svg>
-        <span>GitHub</span>
-        <span class="github-stars" id="github-stars">★ ...</span>
-      </a>
-    </div>
-  </header>
-
-  <main id="main">
-    <section class="hero" aria-labelledby="case-heading">
-      <h1 id="case-heading">TỐI NAY <em>MỞ GÌ?</em></h1>
-
-      <div class="case-stage">
-        <div class="case-shell" id="case-shell" aria-hidden="true">
-          <div class="crate-light"></div>
-          <div class="crate-lid">
-            <span class="crate-hinge hinge-left"></span><span class="crate-hinge hinge-right"></span>
-            <span class="crate-scratch scratch-one"></span><span class="crate-scratch scratch-two"></span>
+    <main class="screen-deck" id="main">
+      <section class="game-screen case-screen is-active" id="screen-case" data-screen-panel="case" role="tabpanel" aria-labelledby="case-heading" aria-hidden="false">
+        <div class="case-layout">
+          <div class="case-title-block"><span class="eyebrow">CASE // 01</span><h1 id="case-heading" tabindex="-1">TỐI NAY <em>MỞ GÌ?</em></h1></div>
+          <div class="case-stage">
+            <div class="case-shell" id="case-shell" aria-hidden="true">
+              <div class="crate-light"></div>
+              <div class="crate-lid"><span class="crate-hinge hinge-left"></span><span class="crate-hinge hinge-right"></span><span class="crate-scratch scratch-one"></span><span class="crate-scratch scratch-two"></span></div>
+              <div class="crate-body"><span class="crate-rail rail-left"></span><span class="crate-rail rail-right"></span><div class="crate-emblem">?</div><span class="crate-label">WEB CASE</span><div class="crate-lock"><span></span></div></div>
+              <div class="crate-shadow"></div>
+            </div>
+            <div class="roulette-wrap" id="roulette-wrap" aria-hidden="true">
+              <div class="roulette-labels"><span id="roulette-status">ĐANG QUAY...</span></div>
+              <div class="roulette-viewport" id="roulette-viewport"><div class="marker" aria-hidden="true"><span></span></div><div class="roulette-track" id="roulette-track"></div></div>
+            </div>
           </div>
-          <div class="crate-body">
-            <span class="crate-rail rail-left"></span><span class="crate-rail rail-right"></span>
-            <div class="crate-emblem">?</div>
-            <span class="crate-label">WEB CASE</span>
-            <div class="crate-lock"><span></span></div>
-          </div>
-          <div class="crate-shadow"></div>
-        </div>
-
-        <div class="roulette-wrap" id="roulette-wrap" aria-hidden="true">
-          <div class="roulette-labels"><span id="roulette-status">ĐANG QUAY...</span></div>
-          <div class="roulette-viewport" id="roulette-viewport">
-            <div class="marker" aria-hidden="true"><span></span></div>
-            <div class="roulette-track" id="roulette-track"></div>
+          <div class="case-controls">
+            <button class="primary-button" id="open-case" type="button"><span>MỞ HÒM</span></button>
+            <div class="case-meta"><div class="global-counter" id="global-counter" aria-live="polite">Lượt khai mở: <strong id="global-counter-val">...</strong></div><div class="recent-drop hidden" id="recent-drop" aria-live="polite"></div></div>
+            <p id="case-message" role="status" aria-live="polite">MỞ HÒM ĐỂ NHẬN MỘT VẬT PHẨM MỚI</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="case-controls">
-        <button class="primary-button" id="open-case" type="button">
-          <span>MỞ HÒM</span>
-        </button>
-        <div class="global-counter" id="global-counter" aria-live="polite">
-          Lượt khai mở: <strong id="global-counter-val">...</strong>
+      <section class="game-screen collection-screen" id="screen-collection" data-screen-panel="collection" role="tabpanel" aria-labelledby="collection-heading" aria-hidden="true" inert>
+        <div class="screen-header"><div><span class="eyebrow">INVENTORY // LOCAL</span><h2 id="collection-heading" tabindex="-1">COLLECTION</h2></div><strong class="screen-stat" id="collection-count">0 / 50</strong></div>
+        <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
+        <p class="completion-badge" id="completion-badge" hidden>COLLECTION COMPLETE // 50 OF 50</p>
+        <div class="inventory-scroll"><div id="collection" class="collection" aria-live="polite"></div></div>
+      </section>
+
+      <section class="game-screen info-screen" id="screen-info" data-screen-panel="info" role="tabpanel" aria-labelledby="info-heading" aria-hidden="true" inert>
+        <div class="screen-header"><div><span class="eyebrow">SYSTEM // V2.3</span><h2 id="info-heading" tabindex="-1">INFO</h2></div></div>
+        <div class="info-layout">
+          <section class="info-block" aria-labelledby="about-heading"><span class="info-index">01</span><div><h3 id="about-heading">CÁCH CHƠI</h3><p>Mở hòm để nhận một vật phẩm chưa có trong inventory. Mỗi lần mở được lưu ngay trên thiết bị này; không có liên kết ra website của vật phẩm.</p></div></section>
+          <section class="info-block" aria-labelledby="odds-heading"><span class="info-index">02</span><div class="odds-content"><h3 id="odds-heading">TỶ LỆ GỐC</h3><dl class="odds-grid"><div><dt>COMMON</dt><dd>45%</dd></div><div><dt>UNCOMMON</dt><dd>25%</dd></div><div><dt>RARE</dt><dd>15%</dd></div><div><dt>EPIC</dt><dd>9%</dd></div><div><dt>LEGENDARY</dt><dd>5%</dd></div><div><dt>MYTHIC</dt><dd>1%</dd></div></dl><p>Khi một bậc đã hết vật phẩm, xác suất được phân phối lại cho các bậc còn lại.</p></div></section>
+          <section class="info-block" aria-labelledby="data-heading"><span class="info-index">03</span><div><h3 id="data-heading">DỮ LIỆU &amp; QUYỀN SỞ HỮU</h3><p>Tiến độ và cài đặt âm thanh chỉ được lưu cục bộ. Tên thương hiệu thuộc về chủ sở hữu tương ứng. Dự án không cung cấp liên kết nội dung người lớn.</p><a class="inline-link" href="https://github.com/TranHuuQuyet/Toinaywebgi" target="_blank" rel="noopener noreferrer">XEM MÃ NGUỒN ↗</a></div></section>
+          <section class="info-block danger-block" aria-labelledby="reset-heading"><span class="info-index">04</span><div><h3 id="reset-heading">RESET</h3><p>Xóa tiến độ hoặc yêu cầu xác nhận tuổi lại trên thiết bị này.</p><div class="reset-actions"><button class="danger-button" id="reset-collection" type="button">RESET COLLECTION</button><button class="text-button outlined" id="reset-age" type="button">RESET AGE</button></div></div></section>
         </div>
-        <div class="recent-drop hidden" id="recent-drop" aria-live="polite"></div>
-        <p id="case-message" role="status" aria-live="polite">MỞ HÒM ĐỂ NHẬN MỘT VẬT PHẨM MỚI</p>
-      </div>
-    </section>
+      </section>
+    </main>
 
-    <section class="collection-section" aria-labelledby="collection-heading">
-      <div class="section-heading">
-        <h2 id="collection-heading">COLLECTION</h2>
-        <div class="total-stat"><strong id="collection-count">0 / 50</strong></div>
-      </div>
-      <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
-      <p class="completion-badge" id="completion-badge" hidden>COLLECTION COMPLETE // 50 OF 50</p>
-      <div id="collection" class="collection" aria-live="polite"></div>
-    </section>
-
-    <section class="reset-zone" aria-labelledby="reset-heading">
-      <h2 id="reset-heading">BẮT ĐẦU LẠI</h2>
-      <button class="danger-button" id="reset-collection" type="button">RESET COLLECTION</button>
-    </section>
-  </main>
-
-  <footer>
-    <p><strong>Tối nay web gì?</strong> - đạp quả nọ ngay!</p>
-    <p>No external adult links are provided. Brand names belong to their respective owners.</p>
-    <button class="footer-button" id="reset-age" type="button">RESET AGE CONFIRMATION</button>
-  </footer>
-
-  <div class="age-gate" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title">
-    <div class="age-panel">
-      <span class="age-number">18+</span>
-      <h2 id="age-title">TỐI NAY WEB GÌ?</h2>
-      <p>Đây là mini game random / collection. Không lưu trữ hoặc chuyển hướng tới nội dung người lớn.</p>
-      <button class="primary-button" id="confirm-age" type="button">TÔI ĐÃ 18+</button>
-      <small>By continuing, you confirm that you are at least 18 years old.</small>
-    </div>
+    <nav class="game-nav" role="tablist" aria-label="Màn hình trò chơi">
+      <button type="button" role="tab" data-screen-target="case" aria-controls="screen-case" aria-selected="true"><span class="nav-index">01</span><span>CASE</span></button>
+      <button type="button" role="tab" data-screen-target="collection" aria-controls="screen-collection" aria-selected="false" tabindex="-1"><span class="nav-index">02</span><span>COLLECTION</span></button>
+      <button type="button" role="tab" data-screen-target="info" aria-controls="screen-info" aria-selected="false" tabindex="-1"><span class="nav-index">03</span><span>INFO</span></button>
+    </nav>
   </div>
 
-  <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title">
-    <canvas class="reveal-canvas" id="reveal-canvas" aria-hidden="true"></canvas>
-    <div class="result-panel" id="result-panel">
-      <div class="result-rays" aria-hidden="true"></div>
-      <div class="result-particles" id="result-particles" aria-hidden="true"></div>
-      <button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button>
-      <span class="result-kicker" id="result-kicker">NEW DISCOVERY</span>
-      <h2 id="result-title">BẠN ĐÃ MỞ KHÓA</h2>
-      <div class="result-mark brand-mark"><img id="result-logo" alt=""><span class="brand-fallback" id="result-initials"></span></div>
-      <strong class="result-name" id="result-name"></strong>
-      <span class="result-rarity" id="result-rarity"></span>
-      <div class="result-actions">
-        <a class="secondary-button" href="./404.html">VIEW ITEM</a>
-        <button class="primary-button compact" id="continue-button" type="button">CONTINUE</button>
-      </div>
-    </div>
-  </dialog>
-
+  <div class="age-gate" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-title"><div class="age-panel"><span class="age-number">18+</span><span class="eyebrow">ACCESS CHECK</span><h2 id="age-title">TỐI NAY WEB GÌ?</h2><p>Đây là mini game random / collection. Không lưu trữ hoặc chuyển hướng tới nội dung người lớn.</p><button class="primary-button" id="confirm-age" type="button">TÔI ĐÃ 18+</button><small>By continuing, you confirm that you are at least 18 years old.</small></div></div>
+  <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title"><canvas class="reveal-canvas" id="reveal-canvas" aria-hidden="true"></canvas><div class="result-panel" id="result-panel"><div class="result-rays" aria-hidden="true"></div><button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button><span class="result-kicker" id="result-kicker">NEW DISCOVERY</span><h2 id="result-title">BẠN ĐÃ MỞ KHÓA</h2><div class="result-mark brand-mark"><img id="result-logo" alt=""><span class="brand-fallback" id="result-initials"></span></div><strong class="result-name" id="result-name"></strong><span class="result-rarity" id="result-rarity"></span><div class="result-actions"><a class="secondary-button" href="./404.html">VIEW ITEM</a><button class="primary-button compact" id="continue-button" type="button">CONTINUE</button></div></div></dialog>
   <div class="screen-flash" id="screen-flash" aria-hidden="true"></div>
   <script type="module" src="./js/app.js"></script>
 </body>

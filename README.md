@@ -1,172 +1,121 @@
-# Tối nay web gì? - Version 2.2.1
+# Tối nay web gì? — V2.3
 
-Một mini case-opening game lấy cảm hứng từ trải nghiệm mở hòm CS2 nhưng mang giao diện Dark Game UI độc lập và tối giản. Game chọn ngẫu nhiên một trong 50 thương hiệu website 18+ để người chơi sưu tập vào album; project chỉ sử dụng tên thương hiệu và favicon/icon local, hoàn toàn không lưu trữ URL thật, không có link ra ngoài và không chứa nội dung explicit.
+Mini game mở hòm và sưu tập 50 vật phẩm, viết bằng HTML, CSS và JavaScript thuần. V2.3 tổ chức toàn bộ trải nghiệm trong một game shell cố định, ưu tiên cảm giác nhanh, gọn và rõ như một game inventory thực thụ.
 
----
+Dự án chỉ lưu metadata an toàn và logo cục bộ. Không item nào chứa URL đích và không có liên kết ra website nội dung người lớn.
 
-## 1. Tính năng nổi bật (V2.2.1)
+## Game shell
 
-- **Roulette giảm tốc liên tục**:
-  - Thời lượng quay 5.4s trên desktop và 5.1s trên mobile với một đường cong quartic liên tục duy nhất.
-  - Vận tốc chỉ giảm, không có breakpoint, tăng tốc lại hoặc thay đổi pha cảm nhận được; các tick cuối giãn tự nhiên trước tiếng dừng.
-  - Winner được tính toán và chọn trước (`predetermined winner`), không fake near-miss thao túng kết quả.
-  - Kim roulette phát sáng và phát âm thanh tick đồng bộ khi từng thẻ lướt qua.
+Giao diện có ba màn hình, chuyển tại chỗ trong khoảng 150–250 ms:
 
-- **Âm thanh Cơ học & Khắc phục Preload**:
-  - 10 mẫu âm thanh WAV cơ học tự sản xuất (procedural synthesis) với họa âm kim loại bất hài hòa, xung kích transient clank, luồng khí whoosh và ngân vang shimmer.
-  - Kiến trúc `SoundManager.ready()` tải trước toàn bộ audio ngay sau Age Gate, giải quyết dứt điểm lỗi mất tiếng ở lượt mở hòm đầu tiên.
-  - Tùy chỉnh bật/tắt âm thanh (Sound Toggle) được lưu tự động trên trình duyệt.
+- **CASE** — màn hình mặc định, gồm hòm vật lý, roulette, nút mở hòm, bộ đếm toàn cục và recent drop.
+- **COLLECTION** — inventory 50 slot theo thứ tự cố định; slot khóa hiển thị `? / UNKNOWN`, slot đã mở chỉ dẫn tới trang 404 nội bộ.
+- **INFO** — hướng dẫn, tỷ lệ rarity, thông tin lưu trữ/quyền sở hữu và các thao tác reset.
 
-- **Hiệu ứng Khai mở & Canvas Particle Engine**:
-  - Động cơ hạt 2D Canvas siêu nhẹ kết hợp sóng xung kích (shockwave) bung tỏa theo từng phẩm cấp:
-    - **Common**: Âm báo gọn gàng, hiệu ứng tinh tế.
-    - **Uncommon**: Xung nhịp xanh lá dịu nhẹ.
-    - **Rare**: Lóe sáng xanh dương, tia lửa và sóng xung kích nhỏ.
-    - **Epic**: Nổ năng lượng tím, luồng lốc xoáy, chấn động màn hình nhẹ.
-    - **Legendary**: Tạm dừng 200ms hồi hộp $\rightarrow$ chấn động ánh vàng rực rỡ $\rightarrow$ luồng sáng xoay vòng $\rightarrow$ hạt lơ lửng ambient.
-    - **Mythic (Jackpot)**: Tạm dừng 300ms im lặng $\rightarrow$ dư chấn sub-bass địa chấn $\rightarrow$ sóng xung kích kép đỏ-vàng bùng nổ $\rightarrow$ rung lắc màn hình cực mạnh.
-  - Tự động dọn dẹp (cleanup) toàn bộ hạt và requestAnimationFrame khi đóng hộp thoại, không rò rỉ bộ nhớ.
-  - Tự động giảm hoặc tắt hiệu ứng khi người dùng bật `prefers-reduced-motion`.
+HUD trên cùng hiển thị tiến độ, âm thanh và GitHub stars. Thanh điều hướng dưới cùng luôn nằm trong viewport, hỗ trợ click, bàn phím mũi tên, Home/End, safe area trên thiết bị di động và trạng thái `aria-selected`.
 
-- **Bộ đếm Mở hòm Toàn cầu (Global Shared Counter)**:
-  - Hiển thị số lượt mở hòm của **tất cả người dùng trên toàn thế giới**: `Lượt khai mở: 1.622.237` (định dạng `vi-VN`).
-  - Được hỗ trợ bởi backend serverless Cloudflare Worker và cơ sở dữ liệu Cloudflare D1 SQL với cơ chế tăng nguyên tử (`UPDATE ... RETURNING value`).
-  - Hoạt động độc lập và không làm gián đoạn game nếu API gặp sự cố (graceful fallback).
+## Luật mở hòm
 
-- **GitHub Header Badge & Live Stars**:
-  - Nút GitHub nhỏ gọn ở góc phải thanh header, hiển thị số sao thật qua Cloudflare Worker cache (hoặc GitHub API).
-  - Tương thích responsive hoàn hảo trên mọi kích thước màn hình từ 360px đến 1440px.
+- Dataset có đúng 50 item, không trùng ID và không đổi thứ tự collection.
+- Winner được chọn trước bằng weighted random; roulette chỉ trình diễn kết quả đó.
+- Tỷ lệ gốc: Common 45%, Uncommon 25%, Rare 15%, Epic 9%, Legendary 5%, Mythic 1%.
+- Tier đã hết item được loại khỏi pool; trọng số được phân phối lại cho các tier còn lại.
+- Một item đã mở không thể xuất hiện lần hai.
+- Roulette dùng một đường cong giảm tốc quartic liên tục: 5,4 giây desktop, 5,1 giây mobile và 520 ms khi bật reduced motion.
+- Epic, Legendary và Mythic có reveal tăng dần; Legendary/Mythic dùng reward screen toàn màn hình. Nút Continue xuất hiện sau lần lượt 400/600/800 ms.
 
-- **Vết rơi gần nhất (Recent Drop)**:
-  - Ghi nhớ và hiển thị gọn gàng thương hiệu vừa mở được: `Lần gần nhất: [logo] Brand Name · RARITY`.
+Canvas particle engine, âm thanh cơ học local và hiệu ứng hòm đều tôn trọng `prefers-reduced-motion`. Particle loop được dọn khi đóng reward screen.
 
-- **Debug Mode Tinh gọn**:
-  - Truy cập `?debug=true` để mở bảng điều khiển ép thử từng phẩm cấp (`COMMON` đến `MYTHIC`), thử âm thanh (`TEST SOUND`) hoặc xóa dữ liệu (`RESET DATA`).
-  - Kiến trúc `openCase(forcedWinner)` sạch sẽ, không monkey-patch DOM.
+## Lưu trữ cục bộ
 
----
+`js/storage.js` quản lý:
 
-## 2. Cấu trúc Dự án
+- xác nhận Age Gate;
+- danh sách item đã mở;
+- trạng thái Sound On/Off;
+- recent drop.
 
-```text
-.
-├── index.html                           # Giao diện chính game
-├── 404.html                             # Trang lỗi nội bộ khi click thẻ đã unlock
-├── css/
-│   └── style.css                        # Toàn bộ CSS Dark Game UI & Responsive
-├── js/
-│   ├── app.js                           # Controller chính
-│   ├── config.js                        # Cấu hình API_BASE_URL & GitHub URL
-│   ├── collection.js                    # Quản lý hiển thị album 50 slot
-│   ├── data.js                          # Danh mục 50 thương hiệu & phân bổ rarity
-│   ├── logo.js                          # Xử lý logo và fallback initials
-│   ├── particles.js                     # Canvas 2D Particle & Shockwave Engine
-│   ├── random.js                        # Weighted random & thuật toán không trùng
-│   ├── roulette.js                      # Roulette băng chuyền ngang & staged easing
-│   ├── sound.js                         # Web Audio & SoundManager preload/play
-│   └── storage.js                       # Quản lý localStorage & session fallback
-├── assets/
-│   ├── icons/favicon.svg                # Favicon game
-│   ├── logos/                           # 50 brand logo/favicon PNG & ICO
-│   └── sounds/                          # 10 file WAV âm thanh cơ học
-├── docs/
-│   ├── audio-credits.md                 # Bản quyền & phương pháp tổng hợp âm thanh
-│   └── dataset-research.md              # Phương pháp và cơ sở dữ liệu thương hiệu
-├── scripts/
-│   └── generate-sound-samples.mjs       # Script tạo 10 file WAV cơ học
-├── worker/                              # Backend Cloudflare Worker & D1
-│   ├── schema.sql                       # D1 Database SQL schema
-│   ├── wrangler.toml.example            # Cấu hình mẫu Cloudflare Wrangler
-│   ├── README.md                        # Hướng dẫn chi tiết triển khai Worker
-│   └── src/
-│       └── index.js                     # Worker code (/stats, /open-case, /github-stars)
-├── tests/
-│   ├── browser-smoke.mjs                # CDP Browser smoke test toàn diện
-│   ├── random.test.js                   # Unit test thuật toán ngẫu nhiên
-│   ├── roulette.test.js                 # Unit test độ mượt và điểm dừng roulette
-│   ├── static-audit.test.js             # Kiểm tra bảo mật tĩnh, relative path & copy
-│   ├── storage.test.js                  # Unit test lưu trữ và fallback bộ nhớ
-│   └── worker.test.js                   # Unit test các endpoint của Cloudflare Worker
-└── package.json
-```
+Nếu `localStorage` không khả dụng, game dùng bộ nhớ trong session hiện tại. Reset Collection chỉ xóa tiến độ collection; Reset Age yêu cầu xác nhận tuổi lại.
 
----
+## Backend và GitHub stars
 
-## 3. Chạy Local & Kiểm thử
+Cloudflare Worker trong `worker/` cung cấp:
 
-### Chạy Local Web Server:
-Do sử dụng Vanilla JavaScript ES Modules, bạn cần chạy qua web server cục bộ:
+- `GET /stats` — tổng số lượt mở;
+- `POST /open-case` — tăng bộ đếm nguyên tử trong D1;
+- `GET /github-stars` — stars của repository với cache;
+- CORS allowlist và rate limit 2 lượt mở / 10 giây / IP.
+
+Frontend vẫn hoạt động đầy đủ khi backend chưa cấu hình. `API_BASE_URL` hiện để trống trong `js/config.js`, vì vậy repository này **chưa khai báo một Worker production đã deploy**. Sau khi tự deploy Worker theo `worker/README.md`, điền URL thật vào hằng số đó.
+
+## Chạy local
+
+ES modules cần một HTTP server:
+
 ```bash
 npx serve .
 ```
-Truy cập: `http://localhost:3000` hoặc `http://127.0.0.1:4173`.
 
-### Chạy Unit Test Suite:
+Hoặc dùng bất kỳ static server nào và mở `index.html` qua HTTP.
+
+## Kiểm thử
+
+Chạy unit/integration/static suite:
+
 ```bash
 npm test
 ```
-Tất cả 25 bài kiểm tra tích hợp trong Node.js test runner sẽ được thực thi:
-- Phân bổ 50 item theo tỷ lệ chuẩn.
-- Đảm bảo không trùng lặp và phân phối lại khi cạn tier.
-- Kiểm tra tính đơn điệu của đường cong giảm tốc roulette.
-- Kiểm tra bảo mật tĩnh (không chứa URL ngoài trừ GitHub & Worker).
-- Kiểm tra logic của Worker backend và atomic increment.
 
-### Chạy Browser Smoke Test:
-Khởi chạy Chrome với cờ DevTools Protocol tại cổng `9222`:
+Suite kiểm tra dataset, trọng số, không trùng, exhaustion redistribution, predetermined winner, đường cong roulette, persistence fallback, URL audit, cấu trúc game shell và Worker.
+
+Browser smoke test dùng Chrome DevTools Protocol tại cổng 9222:
+
 ```bash
-chrome --remote-debugging-port=9222 --headless --disable-gpu
-node tests/browser-smoke.mjs
+chrome --remote-debugging-port=9222 --headless --disable-gpu http://127.0.0.1:4173/index.html
+npm run test:browser
 ```
 
----
+Smoke test đi qua Age Gate, ba màn hình, sound persistence, nhiều lượt roulette đủ thời lượng, Common/Epic/Legendary/Mythic reveal, điểm dừng winner, inventory, 360/390/430/1366/1440 px, debug mode, 404 và console errors.
 
-## 4. Triển khai Backend Cloudflare Worker & D1
+## Debug mode
 
-Xem hướng dẫn chi tiết tại [worker/README.md](file:///d:/C/Toinaywebgi/worker/README.md).
-Tóm tắt các bước:
-1. Tạo database D1:
-   ```bash
-   wrangler d1 create toinaywebgi-db
-   ```
-2. Thực thi schema:
-   ```bash
-   wrangler d1 execute toinaywebgi-db --remote --file=./worker/schema.sql
-   ```
-3. Cập nhật `database_id` vào `worker/wrangler.toml` và triển khai:
-   ```bash
-   cd worker && wrangler deploy
-   ```
-4. Điền URL Worker vào `js/config.js`:
-   ```javascript
-   export const API_BASE_URL = 'https://toinaywebgi-counter.<your-subdomain>.workers.dev';
-   ```
+Mở `index.html?debug=true` để hiện bảng thử nghiệm:
 
----
+- ép một item chưa mở ở từng rarity;
+- thử âm thanh Legendary;
+- reset dữ liệu local.
 
-## 5. Triển khai Frontend lên GitHub Pages
+Các lượt debug không gọi endpoint tăng global counter.
 
-1. Push repository lên nhánh `main` của GitHub.
-2. Truy cập **Settings $\rightarrow$ Pages**.
-3. Tại **Build and deployment**, chọn source **Deploy from a branch** $\rightarrow$ nhánh `main` $\rightarrow$ thư mục `/ (root)` $\rightarrow$ **Save**.
-4. Toàn bộ đường dẫn asset và script sử dụng đường dẫn tương đối (`./`), tương thích hoàn toàn với URL subdomain của GitHub Pages (`username.github.io/repository/`).
+## Cấu trúc chính
 
----
+```text
+index.html                 Game shell và các overlay
+404.html                   Trang 404 nội bộ / Access Denied
+css/style.css              Visual system, shell, inventory, result screens
+js/app.js                  State UI và game controller
+js/data.js                 Dataset 50 item và rarity config
+js/random.js               Weighted random, no-duplicate logic
+js/roulette.js             Strip, landing và continuous deceleration
+js/collection.js           Renderer inventory cố định
+js/storage.js              Local persistence và memory fallback
+js/sound.js                SoundManager và audio preload
+js/particles.js            Canvas reveal engine
+js/config.js               API và GitHub configuration
+worker/                    Cloudflare Worker + D1 schema
+tests/                     Node tests và CDP browser smoke test
+```
 
-## 6. Phân bổ Xác suất Rarity (Tỷ lệ Vàng)
+## Triển khai
 
-| Phẩm cấp | Số lượng | Xác suất trúng | Màu sắc nhận diện |
-|---|---:|---:|---|
-| **Common** | 15 | 45% | `#9aa4a8` (Xám tro) |
-| **Uncommon** | 11 | 25% | `#52d273` (Xanh lục) |
-| **Rare** | 9 | 15% | `#4ba7ff` (Xanh lam) |
-| **Epic** | 7 | 9% | `#b56dff` (Tím huyền bí) |
-| **Legendary** | 5 | 5% | `#ffb33f` (Vàng kim) |
-| **Mythic** | 3 | 1% | `#ff456d` (Hồng ruby độc đắc) |
+Frontend tương thích GitHub Pages vì mọi asset/navigation path nội bộ đều là relative path. Để triển khai:
 
----
+1. Push nhánh cần phát hành lên GitHub.
+2. Trong **Settings → Pages**, chọn **Deploy from a branch**.
+3. Chọn branch và thư mục `/ (root)`.
 
-## 7. Bản quyền & Miễn trừ trách nhiệm
+Backend không được deploy tự động từ repository này. Làm theo `worker/README.md`, tạo D1 database, áp dụng `worker/schema.sql`, cấu hình `wrangler.toml`, deploy Worker, rồi cập nhật `API_BASE_URL`.
 
-- Đây là một mini game parody mang tính giải trí độc lập. Trò chơi không liên kết, không sao chép nguyên mẫu hay sử dụng mã nguồn, hình ảnh hay âm thanh từ Counter-Strike (CS:GO / CS2) hay bất kỳ tựa game nào khác.
-- Tên các thương hiệu thuộc quyền sở hữu của các đơn vị chủ quản tương ứng. Dự án không cung cấp đường dẫn chuyển hướng ra ngoài, không phát và không lưu trữ bất kỳ nội dung đa phương tiện người lớn nào.
+## Ghi chú nội dung
+
+Đây là mini game parody độc lập. Tên thương hiệu thuộc về chủ sở hữu tương ứng. Dự án không lưu, phát hoặc liên kết tới nội dung explicit; click item đã mở luôn dẫn tới `404.html` trong cùng project.

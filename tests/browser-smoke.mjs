@@ -73,6 +73,29 @@ assert.equal(await evaluate("document.querySelector('#age-gate').classList.conta
 await evaluate("document.querySelector('#confirm-age').click()");
 assert.equal(await evaluate("localStorage.getItem('ageConfirmed')"), 'true');
 assert.equal(await evaluate("document.querySelector('#age-gate').classList.contains('is-dismissed')"), true);
+await waitFor("getComputedStyle(document.querySelector('#age-gate')).visibility === 'hidden'");
+
+// The shell boots into CASE and keeps inactive screens non-interactive.
+assert.equal(await evaluate("document.querySelector('#game-shell').dataset.activeScreen"), 'case');
+assert.equal(await evaluate("document.querySelector('[data-screen-panel=case]').getAttribute('aria-hidden')"), 'false');
+assert.equal(await evaluate("document.querySelector('[data-screen-panel=collection]').inert"), true);
+await evaluate("document.querySelector('[data-screen-target=collection]').click()");
+assert.equal(await evaluate("document.querySelector('#game-shell').dataset.activeScreen"), 'collection');
+assert.equal(await evaluate("document.querySelector('[data-screen-panel=case]').inert"), true);
+assert.equal(await evaluate("document.querySelector('[data-screen-panel=collection]').inert"), false);
+await new Promise((resolve) => setTimeout(resolve, 260));
+await screenshot('runtime-collection-desktop.png');
+await evaluate("document.querySelector('[data-screen-target=info]').click()");
+assert.equal(await evaluate("document.querySelector('#game-shell').dataset.activeScreen"), 'info');
+await new Promise((resolve) => setTimeout(resolve, 260));
+await screenshot('runtime-info-desktop.png');
+await evaluate("document.querySelector('[data-screen-target=case]').click()");
+await evaluate("document.querySelector('[data-screen-target=case]').focus()");
+await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight' });
+await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight' });
+await waitFor("document.querySelector('#game-shell').dataset.activeScreen === 'collection'");
+assert.equal(await evaluate("document.activeElement.dataset.screenTarget"), 'collection');
+await evaluate("document.querySelector('[data-screen-target=case]').click()");
 
 await evaluate("document.querySelector('#sound-toggle').click()");
 assert.equal(await evaluate("localStorage.getItem('soundEnabled')"), 'false');
@@ -98,9 +121,12 @@ for (const [entryIndex, entry] of rarityCases.entries()) {
   assert.equal(await evaluate(`document.querySelector('#result-panel').classList.contains('rarity-${entry.rarity}')`), true);
   assert.equal(await evaluate("document.querySelector('#result-kicker').textContent"), entry.heading);
   assert.equal(await evaluate(`(() => { const card = document.querySelector('.roulette-card.is-winner').getBoundingClientRect(); const viewport = document.querySelector('#roulette-viewport').getBoundingClientRect(); const marker = viewport.left + viewport.width / 2; return marker > card.left && marker < card.right; })()`), true);
+  if (entry.rarity === 'common') await screenshot('runtime-common.png');
   if (['epic', 'legendary', 'mythic'].includes(entry.rarity)) {
+    assert.equal(await evaluate("document.querySelector('#continue-button').disabled"), true);
     await screenshot(`runtime-${entry.rarity}.png`);
   }
+  await waitFor("document.querySelector('#continue-button').disabled === false");
   await evaluate("document.querySelector('#continue-button').click()");
 }
 
@@ -109,6 +135,7 @@ for (let index = 0; index < 5; index += 1) {
   await evaluate(`Math.random = () => ${(index + 1) / 10}; document.querySelector('#open-case').click()`);
   await waitFor("document.querySelector('#result-dialog').open === true", 9000);
   assert.equal(await evaluate(`(() => { const card = document.querySelector('.roulette-card.is-winner').getBoundingClientRect(); const viewport = document.querySelector('#roulette-viewport').getBoundingClientRect(); const marker = viewport.left + viewport.width / 2; return marker > card.left + card.width * .2 && marker < card.right - card.width * .2; })()`), true);
+  await waitFor("document.querySelector('#continue-button').disabled === false");
   await evaluate("document.querySelector('#continue-button').click()");
 }
 assert.equal(await evaluate("JSON.parse(localStorage.getItem('unlockedSites')).length"), 10);
@@ -139,6 +166,11 @@ for (const width of [360, 390, 430]) {
     .map((element) => ({ tag: element.tagName, className: element.className, right: Math.round(element.getBoundingClientRect().right) })))`);
   assert.equal(await evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), true, `${width}px: ${overflow}`);
   assert.equal(await evaluate("document.querySelector('#age-gate').classList.contains('is-dismissed')"), true);
+  await evaluate("document.querySelector('[data-screen-target=collection]').click()");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('.collection-grid')).gridTemplateColumns.split(' ').length"), width <= 480 ? 3 : 5);
+  assert.equal(await evaluate("document.querySelector('.game-nav').getBoundingClientRect().bottom <= innerHeight + 1"), true);
+  if (width === 390) await screenshot('runtime-mobile-390.png');
+  await evaluate("document.querySelector('[data-screen-target=case]').click()");
 }
 await screenshot('runtime-mobile.png');
 
@@ -169,12 +201,14 @@ assert.equal(await evaluate("document.querySelector('.debug-panel') !== null"), 
 await evaluate("document.querySelector('.debug-panel button:nth-child(7)').click()"); // MYTHIC is the 6th rarity button (index 7 in panel with title)
 await waitFor("document.querySelector('#result-dialog').open === true", 8000);
 assert.equal(await evaluate("document.querySelector('#result-panel').classList.contains('rarity-mythic')"), true);
+await waitFor("document.querySelector('#continue-button').disabled === false");
 await evaluate("document.querySelector('#continue-button').click()");
 
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/404.html' });
 await waitFor("document.querySelector('#error-heading') !== null");
-assert.ok(['ACCESS DENIED', 'TRANG KHÔNG TỒN TẠI', 'LỌ ÍT THÔI!'].includes(await evaluate("document.querySelector('h1').textContent.trim()")));
+assert.equal(await evaluate("document.querySelector('h1').textContent.trim()"), 'ACCESS DENIED');
+await screenshot('runtime-404.png');
 assert.deepEqual(runtimeErrors, []);
 
-console.log('Browser smoke test passed: age gate, rarity reveals, exact landing, logo fallback, persistence, 360/390/430 layouts, collection, and 404.');
+console.log('Browser smoke test passed: shell navigation, age gate, rarity reveals, exact landing, persistence, responsive inventory, and 404.');
 socket.close();
