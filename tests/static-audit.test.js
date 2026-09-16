@@ -114,7 +114,7 @@ test('Legendary and Mythic rewards hide the dialog close control', async () => {
 test('debug openings never call the global counter endpoint', async () => {
   const source = await readFile('js/app.js', 'utf8');
   assert.match(source, /const isDebugMode\s*=\s*new URLSearchParams\(location\.search\)\.get\('debug'\) === 'true'/);
-  assert.match(source, /if \(!isDebugMode\)\s*{\s*recordGlobalOpen\(\);\s*}/);
+  assert.match(source, /setOpening\(true\);\s*if \(!isDebugMode\)\s*{\s*void recordGlobalOpen\(\);\s*}/);
 });
 
 test('all required mechanical sound samples are stored locally', async () => {

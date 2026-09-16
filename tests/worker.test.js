@@ -35,6 +35,18 @@ test('Worker handles CORS preflight OPTIONS correctly', async () => {
   assert.ok(res.headers.get('Access-Control-Allow-Methods').includes('POST'));
 });
 
+test('Worker allows Vite local development origins', async () => {
+  for (const origin of ['http://localhost:5173', 'http://127.0.0.1:5173']) {
+    const req = new Request('http://localhost/open-case', {
+      method: 'OPTIONS',
+      headers: { Origin: origin, 'Access-Control-Request-Method': 'POST' }
+    });
+    const res = await worker.fetch(req, { DB: createMockDb() });
+    assert.equal(res.status, 204);
+    assert.equal(res.headers.get('Access-Control-Allow-Origin'), origin);
+  }
+});
+
 test('Worker does not reflect unlisted GitHub Pages origins', async () => {
   const req = new Request('http://localhost/stats', {
     method: 'OPTIONS',

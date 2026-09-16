@@ -21,6 +21,15 @@ const state = {
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sound = new SoundManager(state.soundEnabled);
 let resultActionTimer = null;
+let latestGlobalOpens = null;
+
+function showGlobalOpens(value) {
+  if (!Number.isSafeInteger(value) || value < 0 || value < (latestGlobalOpens ?? 0)) return;
+  latestGlobalOpens = value;
+  if (elements.globalCounterVal) {
+    elements.globalCounterVal.textContent = value.toLocaleString('vi-VN');
+  }
+}
 
 const elements = {
   ageGate: $('#age-gate'), confirmAge: $('#confirm-age'), resetAge: $('#reset-age'),
@@ -137,11 +146,9 @@ async function fetchGlobalOpens() {
     const res = await fetch(`${API_BASE_URL}/stats`);
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
-    if (typeof data.totalOpens === 'number') {
-      elements.globalCounterVal.textContent = data.totalOpens.toLocaleString('vi-VN');
-    }
+    showGlobalOpens(data.totalOpens);
   } catch {
-    elements.globalCounterVal.textContent = '...';
+    if (latestGlobalOpens === null) elements.globalCounterVal.textContent = '...';
   }
 }
 
@@ -154,9 +161,7 @@ async function recordGlobalOpen() {
     });
     if (!res.ok) return;
     const data = await res.json();
-    if (typeof data.totalOpens === 'number' && elements.globalCounterVal) {
-      elements.globalCounterVal.textContent = data.totalOpens.toLocaleString('vi-VN');
-    }
+    showGlobalOpens(data.totalOpens);
   } catch {
     // Non-blocking: failure does not affect local game
   }
@@ -201,6 +206,9 @@ export async function openCase(forcedWinner = null) {
   if (!winner) return render();
   state.currentWinner = winner;
   setOpening(true);
+  if (!isDebugMode) {
+    void recordGlobalOpen();
+  }
 
   // Parallel preload logos & sound
   const logosReady = preloadLogos(sites);
@@ -258,11 +266,8 @@ export async function openCase(forcedWinner = null) {
     storage.setUnlocked(state.unlockedSites);
   }
 
-  // Update recent drop & record global counter
+  // Update recent drop after the reveal
   updateRecentDrop(winner);
-  if (!isDebugMode) {
-    recordGlobalOpen();
-  }
 
   render(winner.id);
   showResult(winner);
