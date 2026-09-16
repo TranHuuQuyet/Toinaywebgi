@@ -53,7 +53,7 @@ function render(newId = null) {
   const complete = count === sites.length;
   elements.completionBadge.hidden = !complete;
   elements.openCase.disabled = complete || state.isOpening;
-  elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'OPEN CASE';
+  elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'MỞ HÒM';
   elements.caseMessage.textContent = complete
     ? 'COLLECTION COMPLETE · 50 / 50'
     : '1 HÒM · 1 BRAND MỚI · KHÔNG TRÙNG';
@@ -197,3 +197,113 @@ if (storage.isAgeConfirmed()) {
 }
 updateSoundButton();
 render();
+
+// --- Debug Panel ---
+(function initDebug() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('debug') !== 'true') return;
+
+  const panel = document.createElement('div');
+  panel.className = 'debug-panel';
+  const title = document.createElement('div');
+  title.className = 'debug-panel-title';
+  title.textContent = 'DEBUG';
+  panel.appendChild(title);
+
+  const rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+  let forceRarity = null;
+
+  rarities.forEach((r) => {
+    const btn = document.createElement('button');
+    btn.textContent = r.toUpperCase();
+    btn.addEventListener('click', () => {
+      // Force a specific rarity
+      const candidates = sites.filter((s) => s.rarity === r && !state.unlockedSites.includes(s.id));
+      if (candidates.length === 0) {
+        btn.textContent = `${r.toUpperCase()} (EMPTY)`;
+        return;
+      }
+      // Override pickWinner temporarily
+      const origPick = window.__debugForceItem;
+      window.__debugForceItem = candidates[Math.floor(Math.random() * candidates.length)];
+      openCase();
+    });
+    panel.appendChild(btn);
+  });
+
+  const resetBtn = document.createElement('button');
+  resetBtn.textContent = 'RESET DATA';
+  resetBtn.style.borderColor = '#ff456d';
+  resetBtn.style.color = '#ff456d';
+  resetBtn.addEventListener('click', () => {
+    storage.resetCollection();
+    storage.resetAge();
+    location.reload();
+  });
+  panel.appendChild(resetBtn);
+
+  document.body.appendChild(panel);
+
+  // Monkey-patch pickWinner for debug mode
+  const origOpenCase = openCase;
+  const patchedOpenCase = async function() {
+    if (window.__debugForceItem) {
+      if (state.isOpening) return;
+      const winner = window.__debugForceItem;
+      window.__debugForceItem = null;
+      state.currentWinner = winner;
+      setOpening(true);
+      const logosReady = preloadLogos(sites);
+      sound.unlock();
+      sound.press();
+      sound.unlockCase();
+      elements.caseShell.classList.add('is-shaking');
+      elements.caseMessage.textContent = 'OPENING...';
+      await wait(540);
+      elements.caseShell.classList.remove('is-shaking');
+      elements.caseShell.classList.add('is-unlocked');
+      sound.openCase();
+      elements.caseMessage.textContent = 'HÒM ĐÃ MỞ · GET READY...';
+      await wait(720);
+      await logosReady;
+
+      elements.caseShell.hidden = true;
+      elements.rouletteWrap.classList.add('is-visible');
+      elements.rouletteWrap.setAttribute('aria-hidden', 'false');
+      elements.rouletteStatus.textContent = 'ROLLING...';
+      await spinRoulette({
+        viewport: elements.rouletteViewport,
+        track: elements.rouletteTrack,
+        winner,
+        items: sites,
+        reducedMotion,
+        onTick: (progress) => {
+          sound.tick(progress);
+          if (progress > 0.75) elements.rouletteStatus.textContent = 'SLOWING DOWN...';
+        }
+      });
+
+      elements.rouletteStatus.textContent = 'YOU GOT';
+      sound.stop();
+      if (winner.rarity === 'epic') await wait(100);
+      if (winner.rarity === 'legendary' || winner.rarity === 'mythic') {
+        document.body.classList.add('is-anticipating-reveal');
+      }
+      if (winner.rarity === 'legendary') await wait(150);
+      if (winner.rarity === 'mythic') await wait(250);
+      elements.screenFlash.className = `screen-flash rarity-${winner.rarity} active`;
+      sound.reveal(winner.rarity);
+      await wait({ common: 80, uncommon: 140, rare: 240, epic: 340, legendary: 420, mythic: 520 }[winner.rarity]);
+      state.unlockedSites.push(winner.id);
+      storage.setUnlocked(state.unlockedSites);
+      render(winner.id);
+      showResult(winner);
+      setOpening(false);
+    } else {
+      return origOpenCase();
+    }
+  };
+  // Replace the click handler
+  elements.openCase.removeEventListener('click', openCase);
+  elements.openCase.addEventListener('click', patchedOpenCase);
+})();

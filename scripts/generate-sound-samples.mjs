@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 const RATE = 44100;
 const output = new URL('../assets/sounds/', import.meta.url);
 
+// Deterministic pseudo-random noise generator
 function random(seed) {
   let value = seed >>> 0;
   return () => {
@@ -11,57 +12,222 @@ function random(seed) {
   };
 }
 
-function render({ duration, seed, hits = [], scrape = 0, rumble = 0 }) {
+/**
+ * Render a mechanical/metallic sound from synthesis parameters.
+ * - hits: metallic resonances with harmonics
+ * - scrape: filtered noise simulating metal friction
+ * - rumble: low sub-bass oscillation
+ * - clank: sharp transient attack
+ */
+function render({ duration, seed, hits = [], scrape = 0, rumble = 0, clank = 0 }) {
   const length = Math.ceil(duration * RATE);
   const samples = new Float32Array(length);
   const noise = random(seed);
   let filtered = 0;
+  let filtered2 = 0;
 
   for (let i = 0; i < length; i += 1) {
     const time = i / RATE;
-    filtered = filtered * 0.72 + noise() * 0.28;
-    let value = rumble * Math.sin(time * Math.PI * 2 * 54) * Math.exp(-time * 7);
-    value += scrape * filtered * Math.sin(time * Math.PI * 2 * 1100) * Math.exp(-time * 5);
+    const rawNoise = noise();
+    // Two-pole lowpass for warmer noise character
+    filtered = filtered * 0.68 + rawNoise * 0.32;
+    filtered2 = filtered2 * 0.82 + filtered * 0.18;
+
+    let value = 0;
+
+    // Sub-bass rumble
+    if (rumble > 0) {
+      value += rumble * Math.sin(time * Math.PI * 2 * 48) * Math.exp(-time * 6);
+    }
+
+    // Metal scrape / friction
+    if (scrape > 0) {
+      value += scrape * filtered2 * Math.sin(time * Math.PI * 2 * 950) * Math.exp(-time * 4.5);
+    }
+
+    // Sharp clank transient
+    if (clank > 0 && time < 0.025) {
+      value += clank * filtered * (1 - time / 0.025) * 2.5;
+    }
+
+    // Metal hit resonances with harmonics
     for (const hit of hits) {
       const elapsed = time - hit.at;
       if (elapsed < 0) continue;
       const decay = Math.exp(-elapsed * hit.decay);
-      const metal = Math.sin(elapsed * Math.PI * 2 * hit.frequency)
-        + 0.42 * Math.sin(elapsed * Math.PI * 2 * hit.frequency * 2.73);
-      const transient = elapsed < 0.018 ? filtered * (1 - elapsed / 0.018) * 1.8 : 0;
-      value += (metal * 0.42 + transient) * decay * hit.gain;
+
+      // Fundamental + inharmonic overtones (metal-like)
+      const metal =
+        Math.sin(elapsed * Math.PI * 2 * hit.frequency) +
+        0.45 * Math.sin(elapsed * Math.PI * 2 * hit.frequency * 2.76) +
+        0.2 * Math.sin(elapsed * Math.PI * 2 * hit.frequency * 4.17) +
+        0.1 * Math.sin(elapsed * Math.PI * 2 * hit.frequency * 5.43);
+
+      // Sharp noise transient at impact point
+      const transient = elapsed < 0.015
+        ? filtered * (1 - elapsed / 0.015) * 2.2
+        : 0;
+
+      value += (metal * 0.38 + transient) * decay * hit.gain;
     }
+
     samples[i] = Math.max(-1, Math.min(1, value));
   }
   return samples;
 }
 
+// Create WAV buffer from float samples
 function wav(samples) {
   const buffer = Buffer.alloc(44 + samples.length * 2);
-  buffer.write('RIFF', 0); buffer.writeUInt32LE(36 + samples.length * 2, 4);
-  buffer.write('WAVEfmt ', 8); buffer.writeUInt32LE(16, 16);
-  buffer.writeUInt16LE(1, 20); buffer.writeUInt16LE(1, 22);
-  buffer.writeUInt32LE(RATE, 24); buffer.writeUInt32LE(RATE * 2, 28);
-  buffer.writeUInt16LE(2, 32); buffer.writeUInt16LE(16, 34);
-  buffer.write('data', 36); buffer.writeUInt32LE(samples.length * 2, 40);
-  samples.forEach((sample, index) => buffer.writeInt16LE(Math.round(sample * 32767), 44 + index * 2));
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + samples.length * 2, 4);
+  buffer.write('WAVEfmt ', 8);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);   // PCM
+  buffer.writeUInt16LE(1, 22);   // mono
+  buffer.writeUInt32LE(RATE, 24);
+  buffer.writeUInt32LE(RATE * 2, 28);
+  buffer.writeUInt16LE(2, 32);
+  buffer.writeUInt16LE(16, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(samples.length * 2, 40);
+  samples.forEach((sample, index) =>
+    buffer.writeInt16LE(Math.round(sample * 32767), 44 + index * 2)
+  );
   return buffer;
 }
 
+/* ===== Sound Recipes =====
+ * Designed for mechanical / case-opening game feel.
+ * Each sound uses metallic resonance + noise transients.
+ */
+
 const sounds = {
-  'case-click': { duration: .16, seed: 11, hits: [{ at: 0, frequency: 460, decay: 42, gain: .7 }, { at: .035, frequency: 170, decay: 32, gain: .45 }] },
-  'case-unlock': { duration: .52, seed: 22, scrape: .12, hits: [{ at: 0, frequency: 280, decay: 24, gain: .65 }, { at: .14, frequency: 190, decay: 18, gain: .8 }, { at: .3, frequency: 94, decay: 12, gain: .55 }] },
-  'case-open': { duration: .82, seed: 33, scrape: .2, rumble: .2, hits: [{ at: 0, frequency: 120, decay: 10, gain: .45 }, { at: .48, frequency: 76, decay: 9, gain: .75 }] },
-  'roulette-tick': { duration: .075, seed: 44, hits: [{ at: 0, frequency: 820, decay: 58, gain: .6 }, { at: .012, frequency: 240, decay: 48, gain: .32 }] },
-  'roulette-stop': { duration: .34, seed: 55, rumble: .14, hits: [{ at: 0, frequency: 210, decay: 24, gain: .82 }, { at: .055, frequency: 92, decay: 14, gain: .7 }] },
-  'reveal-common': { duration: .3, seed: 66, hits: [{ at: 0, frequency: 180, decay: 15, gain: .45 }] },
-  'reveal-rare': { duration: .62, seed: 77, rumble: .1, hits: [{ at: 0, frequency: 155, decay: 12, gain: .7 }, { at: .18, frequency: 390, decay: 9, gain: .35 }] },
-  'reveal-epic': { duration: .86, seed: 88, rumble: .16, hits: [{ at: 0, frequency: 115, decay: 9, gain: .8 }, { at: .2, frequency: 310, decay: 7, gain: .42 }, { at: .4, frequency: 470, decay: 6, gain: .3 }] },
-  'reveal-legendary': { duration: 1.15, seed: 99, scrape: .08, rumble: .22, hits: [{ at: 0, frequency: 82, decay: 7, gain: .9 }, { at: .18, frequency: 245, decay: 6, gain: .5 }, { at: .46, frequency: 510, decay: 5, gain: .34 }] },
-  'reveal-mythic': { duration: 1.35, seed: 111, scrape: .13, rumble: .3, hits: [{ at: 0, frequency: 58, decay: 5, gain: 1 }, { at: .16, frequency: 130, decay: 6, gain: .72 }, { at: .4, frequency: 360, decay: 5, gain: .48 }, { at: .66, frequency: 690, decay: 5, gain: .3 }] }
+  // Short metallic click — button press / case interaction
+  'case-click': {
+    duration: 0.14,
+    seed: 11,
+    clank: 0.6,
+    hits: [
+      { at: 0, frequency: 520, decay: 48, gain: 0.75 },
+      { at: 0.025, frequency: 180, decay: 35, gain: 0.4 }
+    ]
+  },
+
+  // Mechanical lock release — two-stage metal impact
+  'case-unlock': {
+    duration: 0.48,
+    seed: 22,
+    scrape: 0.15,
+    clank: 0.4,
+    hits: [
+      { at: 0, frequency: 320, decay: 26, gain: 0.7 },
+      { at: 0.12, frequency: 210, decay: 20, gain: 0.85 },
+      { at: 0.28, frequency: 105, decay: 14, gain: 0.5 }
+    ]
+  },
+
+  // Heavy case open — low metal creak + impact
+  'case-open': {
+    duration: 0.78,
+    seed: 33,
+    scrape: 0.22,
+    rumble: 0.22,
+    hits: [
+      { at: 0, frequency: 130, decay: 11, gain: 0.5 },
+      { at: 0.4, frequency: 82, decay: 9, gain: 0.8 }
+    ]
+  },
+
+  // Roulette tick — very short, dry, sharp click
+  'roulette-tick': {
+    duration: 0.06,
+    seed: 44,
+    clank: 0.8,
+    hits: [
+      { at: 0, frequency: 900, decay: 65, gain: 0.65 },
+      { at: 0.008, frequency: 280, decay: 55, gain: 0.3 }
+    ]
+  },
+
+  // Roulette stop — final heavy clack
+  'roulette-stop': {
+    duration: 0.32,
+    seed: 55,
+    rumble: 0.16,
+    clank: 0.5,
+    hits: [
+      { at: 0, frequency: 240, decay: 26, gain: 0.88 },
+      { at: 0.04, frequency: 100, decay: 16, gain: 0.72 }
+    ]
+  },
+
+  // Reveal common — simple short confirmation
+  'reveal-common': {
+    duration: 0.25,
+    seed: 66,
+    hits: [
+      { at: 0, frequency: 200, decay: 16, gain: 0.5 }
+    ]
+  },
+
+  // Reveal rare — blue burst, stronger
+  'reveal-rare': {
+    duration: 0.58,
+    seed: 77,
+    rumble: 0.12,
+    hits: [
+      { at: 0, frequency: 170, decay: 13, gain: 0.75 },
+      { at: 0.15, frequency: 420, decay: 10, gain: 0.38 }
+    ]
+  },
+
+  // Reveal epic — strong impact with resonance
+  'reveal-epic': {
+    duration: 0.82,
+    seed: 88,
+    rumble: 0.18,
+    scrape: 0.06,
+    hits: [
+      { at: 0, frequency: 125, decay: 10, gain: 0.85 },
+      { at: 0.18, frequency: 340, decay: 8, gain: 0.45 },
+      { at: 0.38, frequency: 500, decay: 7, gain: 0.32 }
+    ]
+  },
+
+  // Reveal legendary — gold sweep, heavy impact
+  'reveal-legendary': {
+    duration: 1.1,
+    seed: 99,
+    scrape: 0.1,
+    rumble: 0.25,
+    hits: [
+      { at: 0, frequency: 90, decay: 7, gain: 0.95 },
+      { at: 0.16, frequency: 270, decay: 7, gain: 0.55 },
+      { at: 0.42, frequency: 540, decay: 6, gain: 0.36 }
+    ]
+  },
+
+  // Reveal mythic — heavy bass + multi-stage impact (jackpot!)
+  'reveal-mythic': {
+    duration: 1.3,
+    seed: 111,
+    scrape: 0.15,
+    rumble: 0.35,
+    clank: 0.3,
+    hits: [
+      { at: 0, frequency: 62, decay: 5, gain: 1.0 },
+      { at: 0.14, frequency: 140, decay: 6, gain: 0.78 },
+      { at: 0.36, frequency: 380, decay: 5.5, gain: 0.5 },
+      { at: 0.6, frequency: 720, decay: 5, gain: 0.32 }
+    ]
+  }
 };
 
 await mkdir(output, { recursive: true });
-await Promise.all(Object.entries(sounds).map(([name, recipe]) =>
-  writeFile(new URL(`${name}.wav`, output), wav(render(recipe)))));
-console.log(`Generated ${Object.keys(sounds).length} original mechanical WAV samples.`);
+await Promise.all(
+  Object.entries(sounds).map(([name, recipe]) =>
+    writeFile(new URL(`${name}.wav`, output), wav(render(recipe)))
+  )
+);
+console.log(`Generated ${Object.keys(sounds).length} mechanical WAV samples.`);

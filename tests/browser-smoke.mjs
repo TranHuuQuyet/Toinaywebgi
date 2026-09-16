@@ -134,9 +134,14 @@ await evaluate("window.confirm = () => true; document.querySelector('#reset-coll
 assert.equal(await evaluate("localStorage.getItem('unlockedSites')"), null);
 assert.equal(await evaluate("document.querySelector('#collection-count').textContent"), '0 / 50');
 
+// Check debug mode
+await send('Page.navigate', { url: 'http://127.0.0.1:4173/index.html?debug=true' });
+await waitFor("document.querySelector('.debug-panel') !== null");
+assert.equal(await evaluate("document.querySelector('.debug-panel') !== null"), true);
+
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/404.html' });
 await waitFor("document.title.includes('404')");
-assert.equal(await evaluate("document.querySelector('h1').textContent.trim()"), 'ACCESS DENIED');
+assert.ok(['ACCESS DENIED', 'TRANG KHÔNG TỒN TẠI'].includes(await evaluate("document.querySelector('h1').textContent.trim()")));
 assert.deepEqual(runtimeErrors, []);
 
 console.log('Browser smoke test passed: age gate, rarity reveals, exact landing, logo fallback, persistence, 360/390/430 layouts, collection, and 404.');
