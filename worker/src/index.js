@@ -84,6 +84,18 @@ export default {
 
     const url = new URL(request.url);
     const path = url.pathname;
+    if (request.method === 'GET' && path === '/') {
+  return jsonResponse({
+    status: 'ok',
+    service: 'toinaywebgi-counter',
+    version: '2.2.1',
+    endpoints: [
+      'GET /stats',
+      'POST /open-case',
+      'GET /github-stars'
+    ]
+  }, 200, corsHeaders);
+}
 
     try {
       // 1. GET /stats

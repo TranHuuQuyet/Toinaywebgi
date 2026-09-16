@@ -1,0 +1,10 @@
+name = "toinaywebgi-counter"
+main = "src/index.js"
+compatibility_date = "2024-09-01"
+
+# Bind your Cloudflare D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "toinaywebgi-db"
+database_id = "795fe7a1-1253-473b-9e32-ca35bd8ee198"
+
