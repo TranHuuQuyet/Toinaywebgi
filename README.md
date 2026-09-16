@@ -1,4 +1,4 @@
-# Tối nay web gì?
+# Tối nay web gì? — Version 2
 
 Một mini game static mở `Web Case`, săn rarity và hoàn thành album 50 thương hiệu website 18+. Project chỉ dùng tên thương hiệu và các biểu trưng chữ viết tắt trung tính; không lưu URL thật, không có outbound link, không embed và không chứa hình ảnh hoặc video explicit.
 
@@ -6,12 +6,14 @@ Một mini game static mở `Web Case`, săn rarity và hoàn thành album 50 th
 
 - Age gate 18+ với trạng thái được lưu trên trình duyệt.
 - Roulette ngang chọn trước winner và luôn dừng đúng item đã chọn.
+- Chuyển động roulette nhiều giai đoạn, giảm tốc có chủ đích, marker phản hồi theo từng thẻ và điểm dừng được tính từ hình học DOM thực tế.
 - Sáu rarity với weighted random và tự phân phối lại khi một tier đã hết item.
 - Không duplicate; mỗi lần mở case luôn tạo một discovery mới.
 - Album 50 fixed slot, progress bar, thống kê theo rarity và complete state.
 - Local persistence cho collection, age confirmation và sound setting.
-- Âm thanh gốc được tổng hợp bằng Web Audio API, không dùng audio từ game khác.
-- Rarity reveal, reduced-motion mode, keyboard focus và layout responsive.
+- Âm thanh gốc nhiều lớp được tổng hợp bằng Web Audio API qua một master gain; không dùng audio từ game khác.
+- Reveal riêng theo rarity, particle/sweep cho tier cao, reduced-motion mode, keyboard focus và layout responsive từ 360px.
+- 50 SVG nhận diện trung tính, riêng biệt và lưu local; ảnh lỗi tự chuyển sang chữ viết tắt mà không làm vỡ layout.
 - Trang `404.html` nội bộ cho mọi unlocked card.
 - Tương thích GitHub Pages repository subpath nhờ toàn bộ asset path dạng relative.
 
@@ -39,15 +41,19 @@ Không có framework, backend, database, authentication hoặc API server.
 │   ├── app.js
 │   ├── collection.js
 │   ├── data.js
+│   ├── logo.js
 │   ├── random.js
 │   ├── roulette.js
 │   ├── sound.js
 │   └── storage.js
-├── assets/logos/brand-placeholder.svg
+├── assets/logos/              # 50 SVG local riêng biệt
+├── docs/dataset-research.md   # phương pháp và nguồn nghiên cứu dataset
+├── scripts/generate-brand-logos.mjs
 ├── tests/
 │   ├── random.test.js
 │   ├── roulette.test.js
-│   └── static-audit.test.js
+│   ├── static-audit.test.js
+│   └── storage.test.js
 └── package.json
 ```
 
@@ -65,7 +71,7 @@ Chạy kiểm tra:
 npm test
 ```
 
-Browser smoke test (`npm run test:browser`) dùng Chrome DevTools Protocol tại cổng `9222` và static server tại `4173`. Test này kiểm tra age gate, sound toggle, một lượt mở case, persistence, mobile overflow, trạng thái 50/50, reset và trang 404.
+Browser smoke test (`npm run test:browser`) dùng Chrome DevTools Protocol tại cổng `9222` và static server tại `4173`. Test này kiểm tra age gate, sound toggle, logo/fallback, điểm dừng roulette, persistence, mobile 360/390/430, trạng thái 50/50, reset và trang 404.
 
 ## Deploy GitHub Pages
 
@@ -101,7 +107,7 @@ Project dùng toàn bộ relative path, nên hoạt động khi deploy dưới d
 ## Thêm website mới
 
 1. Thêm tên vào đúng mảng rarity trong `js/data.js`.
-2. Chỉ giữ metadata an toàn: ID, name, initials, local logo path và rarity.
+2. Chỉ giữ metadata an toàn: ID, name, local logo path và rarity.
 3. Điều chỉnh test distribution nếu chủ đích thay đổi tổng hoặc số item của tier.
 4. Chạy `npm test` để kiểm tra unique ID, distribution, no-outbound-field và no-duplicate logic.
 
@@ -112,7 +118,7 @@ Không thêm các field `url`, `link`, `website` hoặc `redirect`.
 1. Chỉ dùng logo hoặc favicon không explicit và có quyền sử dụng phù hợp.
 2. Tối ưu thành SVG, WebP hoặc PNG nhỏ rồi lưu trong `assets/logos/`.
 3. Sửa local relative path trong `js/data.js`.
-4. Không hotlink ảnh bên ngoài. Nếu quyền sử dụng không rõ, giữ placeholder chữ viết tắt hiện tại.
+4. Không hotlink ảnh bên ngoài. Nếu quyền sử dụng không rõ, chạy `node scripts/generate-brand-logos.mjs` để tạo nhận diện trung tính riêng và giữ fallback chữ viết tắt.
 
 ## Thêm sound
 

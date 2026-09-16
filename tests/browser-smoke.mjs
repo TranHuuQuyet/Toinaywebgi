@@ -54,6 +54,9 @@ async function screenshot(path) {
 await send('Runtime.enable');
 await send('Log.enable');
 await send('Page.enable');
+await send('Emulation.setEmulatedMedia', {
+  features: [{ name: 'prefers-reduced-motion', value: 'reduce' }]
+});
 
 await send('Emulation.setDeviceMetricsOverride', {
   width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false
@@ -72,26 +75,43 @@ assert.equal(await evaluate("localStorage.getItem('soundEnabled')"), 'false');
 assert.equal(await evaluate("document.querySelector('#sound-toggle').textContent"), 'SOUND OFF');
 await evaluate("document.querySelector('#sound-toggle').click()");
 assert.equal(await evaluate("localStorage.getItem('soundEnabled')"), 'true');
+await evaluate("document.querySelector('#sound-toggle').click()");
 
-await evaluate("document.querySelector('#open-case').click()");
-await waitFor("document.querySelector('#result-dialog').open === true", 10000);
-assert.equal(await evaluate("JSON.parse(localStorage.getItem('unlockedSites')).length"), 1);
-assert.match(await evaluate("document.querySelector('#collection-count').textContent"), /^1 \/ 50$/);
+const rarityCases = [
+  { random: 0, rarity: 'common', heading: 'NEW DISCOVERY' },
+  { random: 0.8, rarity: 'rare', heading: 'NEW DISCOVERY' },
+  { random: 0.96, rarity: 'legendary', heading: 'LEGENDARY DISCOVERY' },
+  { random: 0.995, rarity: 'mythic', heading: 'MYTHIC DISCOVERY' }
+];
+for (const entry of rarityCases) {
+  await evaluate(`Math.random = () => ${entry.random}; document.querySelector('#open-case').click()`);
+  await waitFor("document.querySelector('#result-dialog').open === true", 5000);
+  assert.equal(await evaluate(`document.querySelector('#result-panel').classList.contains('rarity-${entry.rarity}')`), true);
+  assert.equal(await evaluate("document.querySelector('#result-kicker').textContent"), entry.heading);
+  assert.equal(await evaluate(`(() => { const card = document.querySelector('.roulette-card.is-winner').getBoundingClientRect(); const viewport = document.querySelector('#roulette-viewport').getBoundingClientRect(); const marker = viewport.left + viewport.width / 2; return marker > card.left && marker < card.right; })()`), true);
+  await evaluate("document.querySelector('#continue-button').click()");
+}
+assert.equal(await evaluate("JSON.parse(localStorage.getItem('unlockedSites')).length"), 4);
+assert.match(await evaluate("document.querySelector('#collection-count').textContent"), /^4 \/ 50$/);
+assert.equal(await evaluate("[...document.images].every((image) => image.complete && image.naturalWidth > 0)"), true);
+await evaluate(`(() => { const image = document.querySelector('.collection-card.is-unlocked .brand-mark img'); image.dispatchEvent(new Event('error')); })()`);
+await waitFor("document.querySelector('.collection-card.is-unlocked .brand-mark').classList.contains('is-fallback')");
 await screenshot('runtime-desktop.png');
 
-await evaluate("document.querySelector('#continue-button').click()");
-await send('Emulation.setDeviceMetricsOverride', {
-  width: 390, height: 844, deviceScaleFactor: 1, mobile: true
-});
-await send('Page.reload', { ignoreCache: true });
-await waitFor("document.readyState === 'complete'");
-await waitFor("document.querySelectorAll('.collection-card').length === 50");
-const overflow = await evaluate(`JSON.stringify([...document.querySelectorAll('*')]
-  .filter((element) => element.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
-  .slice(0, 8)
-  .map((element) => ({ tag: element.tagName, className: element.className, right: Math.round(element.getBoundingClientRect().right) })))`);
-assert.equal(await evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), true, overflow);
-assert.equal(await evaluate("document.querySelector('#age-gate').classList.contains('is-dismissed')"), true);
+for (const width of [360, 390, 430]) {
+  await send('Emulation.setDeviceMetricsOverride', {
+    width, height: 844, deviceScaleFactor: 1, mobile: true
+  });
+  await send('Page.reload', { ignoreCache: true });
+  await waitFor("document.readyState === 'complete'");
+  await waitFor("document.querySelectorAll('.collection-card').length === 50");
+  const overflow = await evaluate(`JSON.stringify([...document.querySelectorAll('*')]
+    .filter((element) => element.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
+    .slice(0, 8)
+    .map((element) => ({ tag: element.tagName, className: element.className, right: Math.round(element.getBoundingClientRect().right) })))`);
+  assert.equal(await evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth"), true, `${width}px: ${overflow}`);
+  assert.equal(await evaluate("document.querySelector('#age-gate').classList.contains('is-dismissed')"), true);
+}
 await screenshot('runtime-mobile.png');
 
 await evaluate(`import('./js/data.js').then(({ sites }) => {
@@ -111,5 +131,5 @@ await waitFor("document.title.includes('404')");
 assert.equal(await evaluate("document.querySelector('h1').textContent.trim()"), 'ACCESS DENIED');
 assert.deepEqual(runtimeErrors, []);
 
-console.log('Browser smoke test passed: age gate, persistence, case opening, collection, mobile overflow, and 404.');
+console.log('Browser smoke test passed: age gate, rarity reveals, exact landing, logo fallback, persistence, 360/390/430 layouts, collection, and 404.');
 socket.close();

@@ -25,11 +25,13 @@ const elements = {
   caseMessage: $('#case-message'), collection: $('#collection'),
   collectionCount: $('#collection-count'), headerCount: $('#header-count'),
   progressBar: $('#progress-bar'), resetCollection: $('#reset-collection'),
+  completionBadge: $('#completion-badge'),
   resultDialog: $('#result-dialog'), resultPanel: $('#result-panel'),
   resultKicker: $('#result-kicker'), resultLogo: $('#result-logo'),
   resultInitials: $('#result-initials'), resultName: $('#result-name'),
   resultRarity: $('#result-rarity'), closeResult: $('#close-result'),
-  continueButton: $('#continue-button'), screenFlash: $('#screen-flash')
+  continueButton: $('#continue-button'), screenFlash: $('#screen-flash'),
+  resultParticles: $('#result-particles')
 };
 
 function updateSoundButton() {
@@ -49,6 +51,7 @@ function render(newId = null) {
   renderCollection(elements.collection, sites, state.unlockedSites, newId);
 
   const complete = count === sites.length;
+  elements.completionBadge.hidden = !complete;
   elements.openCase.disabled = complete || state.isOpening;
   elements.openCase.querySelector('span').textContent = complete ? 'COLLECTION COMPLETE' : 'OPEN CASE';
   elements.caseMessage.textContent = complete
@@ -74,12 +77,14 @@ async function openCase() {
   setOpening(true);
   const logosReady = preloadLogos(sites);
   sound.unlock();
-  sound.click();
+  sound.press();
+  sound.unlockCase();
   elements.caseShell.classList.add('is-shaking');
   elements.caseMessage.textContent = 'AUTHENTICATING CASE…';
   await wait(540);
   elements.caseShell.classList.remove('is-shaking');
   elements.caseShell.classList.add('is-unlocked');
+  sound.openCase();
   elements.caseMessage.textContent = 'LOCK RELEASED · DECRYPTING ARCHIVE…';
   await wait(580);
   await logosReady;
@@ -101,6 +106,7 @@ async function openCase() {
   });
 
   elements.rouletteStatus.textContent = 'TARGET ACQUIRED';
+  if (winner.rarity === 'mythic') await wait(220);
   elements.screenFlash.className = `screen-flash rarity-${winner.rarity} active`;
   sound.reveal(winner.rarity);
   await wait(500);
@@ -113,7 +119,11 @@ async function openCase() {
 
 function showResult(winner) {
   elements.resultPanel.className = `result-panel rarity-${winner.rarity}`;
-  elements.resultKicker.textContent = winner.rarity === 'mythic' ? 'MYTHIC DISCOVERY' : 'NEW DISCOVERY';
+  const headings = { legendary: 'LEGENDARY DISCOVERY', mythic: 'MYTHIC DISCOVERY' };
+  elements.resultKicker.textContent = headings[winner.rarity] || 'NEW DISCOVERY';
+  const particleCount = { common: 0, uncommon: 4, rare: 8, epic: 12, legendary: 20, mythic: 28 }[winner.rarity];
+  elements.resultParticles.innerHTML = Array.from({ length: particleCount }, (_, index) =>
+    `<i style="--i:${index};--x:${(index * 47) % 100}%;--d:${(index % 7) * 70}ms"></i>`).join('');
   setBrandMark(elements.resultPanel.querySelector('.result-mark'), winner);
   elements.resultName.textContent = winner.name;
   elements.resultRarity.textContent = RARITY_CONFIG[winner.rarity].label;
@@ -147,6 +157,9 @@ elements.soundToggle.addEventListener('click', () => {
   updateSoundButton();
 });
 elements.openCase.addEventListener('click', openCase);
+document.querySelectorAll('button, a').forEach((control) => {
+  control.addEventListener('pointerenter', () => sound.hover());
+});
 elements.closeResult.addEventListener('click', closeResult);
 elements.continueButton.addEventListener('click', closeResult);
 elements.resultDialog.addEventListener('cancel', (event) => { event.preventDefault(); closeResult(); });

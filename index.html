@@ -33,6 +33,7 @@
 
       <div class="case-stage">
         <div class="case-shell" id="case-shell" aria-hidden="true">
+          <div class="case-lock-bars"><span></span><span></span></div>
           <div class="case-corner corner-tl"></div><div class="case-corner corner-tr"></div>
           <div class="case-corner corner-bl"></div><div class="case-corner corner-br"></div>
           <div class="case-topline"><span>W/A</span><span>SECURE CONTAINER</span><span>01</span></div>
@@ -68,6 +69,7 @@
         <div class="total-stat"><strong id="collection-count">0 / 50</strong><span>DISCOVERED</span></div>
       </div>
       <div class="progress-track" aria-label="Collection progress"><span id="progress-bar"></span></div>
+      <p class="completion-badge" id="completion-badge" hidden>ARCHIVE COMPLETE // 50 OF 50</p>
       <div id="collection" class="collection" aria-live="polite"></div>
     </section>
 
@@ -97,6 +99,7 @@
 
   <dialog class="result-dialog" id="result-dialog" aria-labelledby="result-title">
     <div class="result-panel" id="result-panel">
+      <div class="result-particles" id="result-particles" aria-hidden="true"></div>
       <button class="dialog-close" id="close-result" type="button" aria-label="Đóng kết quả">×</button>
       <span class="result-kicker" id="result-kicker">NEW DISCOVERY</span>
       <h2 id="result-title">YOU UNLOCKED</h2>

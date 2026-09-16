@@ -25,6 +25,29 @@ export function renderRoulette(track, items) {
   activateLogoFallbacks(track);
 }
 
+export function calculateLandingTarget({ cardLeft, cardWidth, viewportWidth }, rng = Math.random, reducedMotion = false) {
+  const safeJitter = reducedMotion ? 0 : (rng() - 0.5) * cardWidth * 0.42;
+  return -(cardLeft + cardWidth / 2 - viewportWidth / 2 + safeJitter);
+}
+
+export function stagedSpinEase(progress) {
+  if (progress <= 0) return 0;
+  if (progress >= 1) return 1;
+  if (progress < 0.58) {
+    const local = progress / 0.58;
+    return 0.8 * (1 - Math.pow(1 - local, 3));
+  }
+  const local = (progress - 0.58) / 0.42;
+  return 0.8 + 0.2 * (1 - Math.pow(1 - local, 4));
+}
+
+function nearestCard(cards, markerPosition) {
+  return cards.reduce((nearest, card) => {
+    const distance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - markerPosition);
+    return distance < nearest.distance ? { card, distance } : nearest;
+  }, { card: cards[0], distance: Infinity }).card;
+}
+
 export function spinRoulette({ viewport, track, winner, items, reducedMotion, onTick }) {
   const strip = buildRouletteItems(items, winner);
   renderRoulette(track, strip);
@@ -33,36 +56,43 @@ export function spinRoulette({ viewport, track, winner, items, reducedMotion, on
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const winnerCard = track.children[WINNER_INDEX];
       const viewportCenter = viewport.clientWidth / 2;
-      const winnerCenter = winnerCard.offsetLeft + winnerCard.offsetWidth / 2;
-      const jitter = reducedMotion ? 0 : (Math.random() - 0.5) * winnerCard.offsetWidth * 0.28;
-      const target = -(winnerCenter - viewportCenter + jitter);
-      const duration = reducedMotion ? 650 : 4700;
-      let previousIndex = -1;
-      let animationFrame;
+      const target = calculateLandingTarget({
+        cardLeft: winnerCard.offsetLeft,
+        cardWidth: winnerCard.offsetWidth,
+        viewportWidth: viewport.clientWidth
+      }, Math.random, reducedMotion);
+      const duration = reducedMotion ? 420 : 5200;
+      let previousCard = null;
       const startedAt = performance.now();
+      const cards = [...track.children];
+      const marker = viewport.querySelector('.marker');
 
       function tick(now) {
         const elapsed = now - startedAt;
         const progress = Math.min(elapsed / duration, 1);
-        const currentX = target * (1 - Math.pow(1 - progress, 4));
+        const currentX = target * stagedSpinEase(progress);
+        track.style.transform = `translate3d(${currentX}px, 0, 0)`;
         const markerPosition = viewportCenter - currentX;
-        const currentIndex = Math.max(0, Math.min(strip.length - 1,
-          Math.floor(markerPosition / winnerCard.offsetWidth)));
-        if (currentIndex !== previousIndex) {
-          previousIndex = currentIndex;
+        const currentCard = nearestCard(cards, markerPosition);
+        if (currentCard !== previousCard) {
+          previousCard?.classList.remove('is-near-marker');
+          currentCard.classList.add('is-near-marker');
+          marker?.classList.remove('is-ticking');
+          void marker?.offsetWidth;
+          marker?.classList.add('is-ticking');
+          previousCard = currentCard;
           onTick?.(progress);
         }
-        if (progress < 1) animationFrame = requestAnimationFrame(tick);
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          previousCard?.classList.remove('is-near-marker');
+          winnerCard.classList.add('is-winner');
+          resolve(winnerCard);
+        }
       }
 
-      track.style.transition = `transform ${duration}ms cubic-bezier(.08,.66,.1,1)`;
-      track.style.transform = `translate3d(${target}px, 0, 0)`;
-      animationFrame = requestAnimationFrame(tick);
-      track.addEventListener('transitionend', () => {
-        cancelAnimationFrame(animationFrame);
-        winnerCard.classList.add('is-winner');
-        resolve(winnerCard);
-      }, { once: true });
+      requestAnimationFrame(tick);
     }));
   });
 }
