@@ -46,7 +46,7 @@ Cloudflare Worker trong `worker/` cung cấp:
 - `GET /github-stars` — stars của repository với cache;
 - CORS allowlist và rate limit 2 lượt mở / 10 giây / IP.
 
-Frontend vẫn hoạt động đầy đủ khi backend chưa cấu hình. GitHub stars dùng GitHub API trực tiếp làm fallback, nhưng global case-open counter luôn là Worker-only và tiếp tục hiển thị `...` khi không có backend. `API_BASE_URL` hiện để trống trong `js/config.js`, vì vậy repository này **chưa khai báo một Worker production đã deploy**. Sau khi tự deploy Worker theo `worker/README.md`, điền URL thật vào hằng số đó.
+Frontend gọi Worker tại `https://toinaywebgi-counter.toinaywebgi.workers.dev` qua `js/config.js`. Khi tải trang, frontend đọc `/stats` và `/github-stars`; mỗi lượt mở hòm hợp lệ gửi một POST `/open-case` ngay khi bắt đầu quay, không chờ mạng để chạy animation. Lượt thử trong debug mode không tăng counter. Nếu Worker lỗi hoặc giới hạn tốc độ (429), lượt quay vẫn tiếp tục; GitHub stars có fallback tới GitHub API và counter giữ giá trị đã nhận (hoặc `...` nếu chưa tải được). Khi đổi Worker URL, chỉ sửa `js/config.js`.
 
 ## Chạy local
 
@@ -114,7 +114,7 @@ Frontend tương thích GitHub Pages vì mọi asset/navigation path nội bộ 
 2. Trong **Settings → Pages**, chọn **Deploy from a branch**.
 3. Chọn branch và thư mục `/ (root)`.
 
-Backend không được deploy tự động từ repository này. Làm theo `worker/README.md`, tạo D1 database, áp dụng `worker/schema.sql`, cấu hình `wrangler.toml`, deploy Worker, rồi cập nhật `API_BASE_URL`.
+Backend không được deploy tự động từ repository này. Khi thay đổi `worker/src/index.js`, chạy `npx.cmd wrangler deploy` trong thư mục `worker/` trên PowerShell (hoặc `npx wrangler deploy` trên shell khác) để đưa thay đổi lên Cloudflare. Xem `worker/README.md` nếu cần cấu hình D1 lại.
 
 ## Ghi chú nội dung
 
