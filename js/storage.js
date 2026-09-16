@@ -3,23 +3,43 @@ const keys = Object.freeze({
   unlocked: 'unlockedSites',
   sound: 'soundEnabled'
 });
+const sessionMemory = new Map();
 
 function read(key, fallback) {
   try {
     const value = localStorage.getItem(key);
-    return value === null ? fallback : value;
+    if (value !== null) return value;
   } catch {
-    return fallback;
+    // Browsers can block storage in private or restricted contexts.
+  }
+  return sessionMemory.get(key) ?? fallback;
+}
+
+function write(key, value) {
+  sessionMemory.set(key, value);
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Session memory keeps the game playable when persistence is unavailable.
+  }
+}
+
+function remove(key) {
+  sessionMemory.delete(key);
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Nothing else to clear when browser persistence is unavailable.
   }
 }
 
 export const storage = {
   isAgeConfirmed: () => read(keys.age, 'false') === 'true',
   confirmAge() {
-    localStorage.setItem(keys.age, 'true');
+    write(keys.age, 'true');
   },
   resetAge() {
-    localStorage.removeItem(keys.age);
+    remove(keys.age);
   },
   getUnlocked() {
     try {
@@ -30,13 +50,13 @@ export const storage = {
     }
   },
   setUnlocked(ids) {
-    localStorage.setItem(keys.unlocked, JSON.stringify([...new Set(ids)]));
+    write(keys.unlocked, JSON.stringify([...new Set(ids)]));
   },
   resetCollection() {
-    localStorage.removeItem(keys.unlocked);
+    remove(keys.unlocked);
   },
   isSoundEnabled: () => read(keys.sound, 'true') !== 'false',
   setSoundEnabled(enabled) {
-    localStorage.setItem(keys.sound, String(Boolean(enabled)));
+    write(keys.sound, String(Boolean(enabled)));
   }
 };

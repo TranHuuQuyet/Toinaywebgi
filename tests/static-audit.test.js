@@ -22,3 +22,14 @@ test('HTML asset and navigation paths are relative for repository subdirectories
     assert.doesNotMatch(html, /(?:src|href)=["']\/(?!\/)/, `${file} contains a root-relative path`);
   }
 });
+
+test('application navigation stays internal and has no external window navigation', async () => {
+  const html = await readFile('index.html', 'utf8');
+  const hrefs = [...html.matchAll(/href=["']([^"']+)["']/g)].map((match) => match[1]);
+  assert.equal(hrefs.every((href) => href.startsWith('./') || href.startsWith('#')), true);
+
+  for await (const file of glob('js/*.js')) {
+    const source = await readFile(file, 'utf8');
+    assert.doesNotMatch(source, /window\.(?:open|location)|location\.(?:assign|replace)/);
+  }
+});

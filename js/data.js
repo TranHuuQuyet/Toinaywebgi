@@ -7,50 +7,49 @@ export const RARITY_CONFIG = Object.freeze({
   mythic: { label: 'MYTHIC', weight: 1 }
 });
 
-const placeholder = './assets/logos/brand-placeholder.svg';
-
-const catalog = {
+const catalog = Object.freeze({
   common: [
-    'HClips', 'TNAFlix', 'DrTuber', 'Beeg', 'Thumbzilla',
-    'KeezMovies', 'SunPorno', 'Nuvid', 'PornOne', 'PornMD',
-    '4Tube', 'Jerkmate', 'Flirt4Free', 'Evil Angel', 'Dorcel'
+    'PornOne', 'Beeg', 'Thumbzilla', 'Mofos', 'Vixen',
+    'Blacked', 'Tushy', 'Playboy', 'Naughty America', 'Kink',
+    'HClips', 'TNAFlix', 'Dit69', 'Phe69', 'VNSexTop1'
   ],
   uncommon: [
-    'Mofos', 'Twistys', 'Adult Time', 'Vixen', 'Blacked',
-    'Tushy', 'Playboy', 'Penthouse', 'Motherless', 'Kink', 'Jules Jordan'
+    'LiveJasmin', 'Cam4', 'CamSoda', 'MyFreeCams', 'ManyVids',
+    'Motherless', 'Tube8', 'Reality Kings', 'Bang Bros', 'xHamsterLive', 'JAVHDZ'
   ],
   rare: [
-    'Cam4', 'CamSoda', 'MyFreeCams', 'ManyVids', 'Eporner',
-    'SpankBang', 'Tube8', 'Digital Playground', 'Naughty America'
+    'RedTube', 'YouPorn', 'Eporner', 'BongaCams', 'Stripchat',
+    'Chaturbate', 'OnlyFans', 'Brazzers', 'Fansly'
   ],
   epic: [
-    'RedTube', 'YouPorn', 'LiveJasmin', 'BongaCams',
-    'Reality Kings', 'Bang Bros', 'Fansly'
+    'XHSpot', 'TubePornstars', 'JAVHDPorn', 'HugeSex',
+    'JAVHD', 'BoyfriendTV', 'SpankBang'
   ],
-  legendary: ['XNXX', 'OnlyFans', 'Chaturbate', 'Stripchat', 'Brazzers'],
+  legendary: ['HentaiEra', 'HentaiRead', 'JAVTiful', 'XNXX', 'Xasiat'],
   mythic: ['Pornhub', 'XVideos', 'xHamster']
-};
+});
 
-function initials(name) {
+export function getInitials(name) {
   const words = name.replace(/([a-z])([A-Z])/g, '$1 $2').split(/[\s-]+/);
   const mark = words.length > 1 ? words.map((word) => word[0]).join('') : name.slice(0, 2);
   return mark.slice(0, 3).toUpperCase();
 }
 
+function slugify(name) {
+  return name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+let itemNumber = 0;
 export const sites = Object.freeze(
-  Object.entries(catalog).flatMap(([rarity, names]) =>
-    names.map((name, index) => ({
-      id: `site-${String(
-        Object.entries(catalog)
-          .slice(0, Object.keys(catalog).indexOf(rarity))
-          .reduce((sum, [, previous]) => sum + previous.length, 0) + index + 1
-      ).padStart(3, '0')}`,
+  Object.entries(catalog).flatMap(([rarity, names]) => names.map((name) => {
+    itemNumber += 1;
+    return Object.freeze({
+      id: `site-${String(itemNumber).padStart(3, '0')}`,
       name,
-      initials: initials(name),
-      logo: placeholder,
+      logo: `./assets/logos/${slugify(name)}.svg`,
       rarity
-    }))
-  )
+    });
+  }))
 );
 
 export const rarityOrder = Object.freeze(Object.keys(RARITY_CONFIG));

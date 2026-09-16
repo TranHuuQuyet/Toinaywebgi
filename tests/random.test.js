@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { access, stat } from 'node:fs/promises';
 import { sites, RARITY_CONFIG } from '../js/data.js';
 import { getAvailableRarities, pickWinner, selectWeightedRarity } from '../js/random.js';
 
@@ -20,11 +21,30 @@ test('dataset contains exactly 50 unique items in the required rarity distributi
   });
 });
 
-test('dataset never stores outbound navigation fields', () => {
-  const forbidden = ['url', 'link', 'website', 'redirect'];
+test('dataset only stores safe collection metadata', () => {
+  const allowed = ['id', 'logo', 'name', 'rarity'];
   for (const site of sites) {
-    assert.equal(forbidden.some((field) => Object.hasOwn(site, field)), false);
+    assert.deepEqual(Object.keys(site).sort(), allowed);
     assert.match(site.logo, /^\.\/assets\/logos\//);
+  }
+});
+
+test('Vietnam-focused priority brands are represented in the dataset', () => {
+  const names = new Set(sites.map(({ name }) => name));
+  for (const brand of [
+    'Pornhub', 'XVideos', 'xHamster', 'HentaiEra', 'HentaiRead',
+    'JAVTiful', 'XHSpot', 'TubePornstars', 'JAVHDPorn', 'XNXX',
+    'HugeSex', 'Xasiat', 'JAVHD', 'BoyfriendTV'
+  ]) assert.equal(names.has(brand), true, `${brand} is missing`);
+});
+
+test('every brand has a unique local logo asset and no generic placeholder', async () => {
+  assert.equal(new Set(sites.map(({ logo }) => logo)).size, 50);
+  for (const site of sites) {
+    assert.doesNotMatch(site.logo, /placeholder/i);
+    const file = site.logo.replace(/^\.\//, '');
+    await access(file);
+    assert.ok((await stat(file)).size < 100 * 1024, `${file} exceeds 100 KB`);
   }
 });
 

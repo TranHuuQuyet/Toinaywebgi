@@ -1,3 +1,5 @@
+import { activateLogoFallbacks, brandMarkMarkup } from './logo.js';
+
 export const WINNER_INDEX = 38;
 const STRIP_LENGTH = 44;
 
@@ -10,10 +12,7 @@ export function buildRouletteItems(items, winner, rng = Math.random) {
 function cardMarkup(item) {
   return `
     <div class="roulette-card rarity-${item.rarity}" data-site-id="${item.id}">
-      <div class="brand-mark" aria-hidden="true">
-        <img src="${item.logo}" alt="" draggable="false">
-        <span>${item.initials}</span>
-      </div>
+      ${brandMarkMarkup(item)}
       <strong>${item.name}</strong>
       <small>${item.rarity.toUpperCase()}</small>
     </div>`;
@@ -23,6 +22,7 @@ export function renderRoulette(track, items) {
   track.innerHTML = items.map(cardMarkup).join('');
   track.style.transition = 'none';
   track.style.transform = 'translate3d(0, 0, 0)';
+  activateLogoFallbacks(track);
 }
 
 export function spinRoulette({ viewport, track, winner, items, reducedMotion, onTick }) {

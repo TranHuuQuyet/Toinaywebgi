@@ -4,6 +4,7 @@ import { storage } from './storage.js';
 import { renderCollection } from './collection.js';
 import { spinRoulette } from './roulette.js';
 import { SoundManager } from './sound.js';
+import { preloadLogos, setBrandMark } from './logo.js';
 
 const $ = (selector) => document.querySelector(selector);
 const validIds = new Set(sites.map(({ id }) => id));
@@ -71,6 +72,7 @@ async function openCase() {
   if (!winner) return render();
   state.currentWinner = winner;
   setOpening(true);
+  const logosReady = preloadLogos(sites);
   sound.unlock();
   sound.click();
   elements.caseShell.classList.add('is-shaking');
@@ -80,6 +82,7 @@ async function openCase() {
   elements.caseShell.classList.add('is-unlocked');
   elements.caseMessage.textContent = 'LOCK RELEASED · DECRYPTING ARCHIVE…';
   await wait(580);
+  await logosReady;
 
   elements.caseShell.hidden = true;
   elements.rouletteWrap.classList.add('is-visible');
@@ -111,9 +114,7 @@ async function openCase() {
 function showResult(winner) {
   elements.resultPanel.className = `result-panel rarity-${winner.rarity}`;
   elements.resultKicker.textContent = winner.rarity === 'mythic' ? 'MYTHIC DISCOVERY' : 'NEW DISCOVERY';
-  elements.resultLogo.src = winner.logo;
-  elements.resultLogo.alt = `${winner.name} logo placeholder`;
-  elements.resultInitials.textContent = winner.initials;
+  setBrandMark(elements.resultPanel.querySelector('.result-mark'), winner);
   elements.resultName.textContent = winner.name;
   elements.resultRarity.textContent = RARITY_CONFIG[winner.rarity].label;
   elements.resultDialog.showModal();

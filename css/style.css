@@ -129,8 +129,10 @@ h1 em { color: var(--acid); font-style: normal; -webkit-text-stroke: 1px rgba(19
 .marker::before, .marker::after { content: ''; position: absolute; left: -7px; border-left: 7px solid transparent; border-right: 7px solid transparent; }
 .marker::before { top: 0; border-top: 10px solid var(--acid); }.marker::after { bottom: 0; border-bottom: 10px solid var(--acid); }
 .brand-mark { position: relative; display: grid; place-items: center; width: 108px; height: 76px; overflow: hidden; }
-.brand-mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.brand-mark span { position: relative; z-index: 1; color: var(--text); font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em; }
+.brand-mark img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: 94%; max-height: 86%; margin: auto; object-fit: contain; }
+.brand-fallback { position: relative; z-index: 1; display: none; color: var(--text); font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; letter-spacing: -.02em; }
+.brand-mark.is-fallback img { display: none; }
+.brand-mark.is-fallback .brand-fallback { display: block; }
 .collection-section { padding: 6rem clamp(1rem, 5vw, 5.5rem); background: rgba(12,16,19,.88); border-top: 1px solid var(--line-soft); }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; max-width: 1380px; margin: 0 auto 1rem; }
 .section-index { display: block; margin-bottom: .35rem; color: var(--acid); font-size: .58rem; letter-spacing: .14em; }

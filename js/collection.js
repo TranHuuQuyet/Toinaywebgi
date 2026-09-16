@@ -1,8 +1,9 @@
 import { RARITY_CONFIG, rarityOrder } from './data.js';
+import { activateLogoFallbacks, brandMarkMarkup } from './logo.js';
 
 function markMarkup(site, locked) {
   if (locked) return '<span class="unknown-mark" aria-hidden="true">?</span>';
-  return `<span class="brand-mark" aria-hidden="true"><img src="${site.logo}" alt=""><span>${site.initials}</span></span>`;
+  return brandMarkMarkup(site, { lazy: true });
 }
 
 export function renderCollection(container, items, unlockedIds, newId = null) {
@@ -27,6 +28,7 @@ export function renderCollection(container, items, unlockedIds, newId = null) {
       <div class="collection-grid">${cards}</div>
     </section>`;
   }).join('');
+  activateLogoFallbacks(container);
 }
 
 export function getRarityCounts(items, unlockedIds) {
