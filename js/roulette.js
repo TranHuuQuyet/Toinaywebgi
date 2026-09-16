@@ -26,19 +26,32 @@ export function renderRoulette(track, items) {
 }
 
 export function calculateLandingTarget({ cardLeft, cardWidth, viewportWidth }, rng = Math.random, reducedMotion = false) {
-  const safeJitter = reducedMotion ? 0 : (rng() - 0.5) * cardWidth * 0.42;
+  const safeJitter = reducedMotion ? 0 : (rng() - 0.5) * cardWidth * 0.38;
   return -(cardLeft + cardWidth / 2 - viewportWidth / 2 + safeJitter);
 }
 
+/**
+ * 3-Stage Mechanical Deceleration Curve:
+ * 1. Rapid cruise (0 - 52%): fast roll covering 72% of distance
+ * 2. Deceleration transition (52% - 82%): braking covering 72% to 92%
+ * 3. Suspense tail (82% - 100%): final slow-motion ticks settling into the winner
+ */
 export function stagedSpinEase(progress) {
   if (progress <= 0) return 0;
   if (progress >= 1) return 1;
-  if (progress < 0.58) {
-    const local = progress / 0.58;
-    return 0.8 * (1 - Math.pow(1 - local, 3));
+
+  if (progress < 0.52) {
+    const local = progress / 0.52;
+    return 0.72 * (1 - Math.pow(1 - local, 2.5));
   }
-  const local = (progress - 0.58) / 0.42;
-  return 0.8 + 0.2 * (1 - Math.pow(1 - local, 4));
+
+  if (progress < 0.82) {
+    const local = (progress - 0.52) / 0.30;
+    return 0.72 + 0.20 * (1 - Math.pow(1 - local, 3.0));
+  }
+
+  const local = (progress - 0.82) / 0.18;
+  return 0.92 + 0.08 * (1 - Math.pow(1 - local, 3.8));
 }
 
 function nearestCard(cards, markerPosition) {
@@ -61,7 +74,9 @@ export function spinRoulette({ viewport, track, winner, items, reducedMotion, on
         cardWidth: winnerCard.offsetWidth,
         viewportWidth: viewport.clientWidth
       }, Math.random, reducedMotion);
-      const duration = reducedMotion ? 420 : 5200;
+
+      // 6.2s total duration for suspenseful deceleration curve
+      const duration = reducedMotion ? 420 : 6200;
       let previousCard = null;
       const startedAt = performance.now();
       const cards = [...track.children];
@@ -74,19 +89,27 @@ export function spinRoulette({ viewport, track, winner, items, reducedMotion, on
         track.style.transform = `translate3d(${currentX}px, 0, 0)`;
         const markerPosition = viewportCenter - currentX;
         const currentCard = nearestCard(cards, markerPosition);
+
         if (currentCard !== previousCard) {
-          previousCard?.classList.remove('is-near-marker');
+          if (previousCard) {
+            previousCard.classList.remove('is-near-marker');
+          }
           currentCard.classList.add('is-near-marker');
-          marker?.classList.remove('is-ticking');
-          void marker?.offsetWidth;
-          marker?.classList.add('is-ticking');
+          if (marker) {
+            marker.classList.remove('is-ticking');
+            void marker.offsetWidth;
+            marker.classList.add('is-ticking');
+          }
           previousCard = currentCard;
           onTick?.(progress);
         }
+
         if (progress < 1) {
           requestAnimationFrame(tick);
         } else {
-          previousCard?.classList.remove('is-near-marker');
+          if (previousCard) {
+            previousCard.classList.remove('is-near-marker');
+          }
           winnerCard.classList.add('is-winner');
           resolve(winnerCard);
         }

@@ -54,9 +54,24 @@ export const storage = {
   },
   resetCollection() {
     remove(keys.unlocked);
+    remove('recentDrop');
   },
   isSoundEnabled: () => read(keys.sound, 'true') !== 'false',
   setSoundEnabled(enabled) {
     write(keys.sound, String(Boolean(enabled)));
+  },
+  getRecentDrop() {
+    try {
+      return JSON.parse(read('recentDrop', 'null'));
+    } catch {
+      return null;
+    }
+  },
+  setRecentDrop(drop) {
+    if (drop) {
+      write('recentDrop', JSON.stringify(drop));
+    } else {
+      remove('recentDrop');
+    }
   }
 };

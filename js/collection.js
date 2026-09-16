@@ -17,7 +17,7 @@ export function renderCollection(container, items, unlockedIds, newId = null) {
       const attrs = locked
         ? 'aria-label="Locked collection slot"'
         : `href="./404.html" aria-label="View ${site.name}"`;
-      return `<${tag} ${attrs} class="collection-card rarity-${rarity} ${locked ? 'is-locked' : 'is-unlocked'} ${site.id === newId ? 'is-new' : ''}">
+      return `<${tag} ${attrs} class="collection-card rarity-${rarity} ${locked ? 'is-locked' : 'is-unlocked'} ${site.id === newId ? 'is-new is-just-unlocked' : ''}">
         ${markMarkup(site, locked)}
         <strong>${locked ? 'UNKNOWN' : site.name}</strong>
         <small>${RARITY_CONFIG[rarity].label}</small>

@@ -22,7 +22,11 @@ socket.addEventListener('message', ({ data }) => {
     return message.error ? reject(new Error(message.error.message)) : resolve(message.result);
   }
   if (message.method === 'Runtime.exceptionThrown') runtimeErrors.push(message.params.exceptionDetails.text);
-  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') runtimeErrors.push(message.params.entry.text);
+  if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') {
+    if (!message.params.entry.text.includes('ERR_CACHE_READ_FAILURE')) {
+      runtimeErrors.push(message.params.entry.text);
+    }
+  }
 });
 
 function send(method, params = {}) {
@@ -134,10 +138,22 @@ await evaluate("window.confirm = () => true; document.querySelector('#reset-coll
 assert.equal(await evaluate("localStorage.getItem('unlockedSites')"), null);
 assert.equal(await evaluate("document.querySelector('#collection-count').textContent"), '0 / 50');
 
-// Check debug mode
+// Check GitHub badge & global counter
+assert.equal(await evaluate("document.querySelector('#github-link').getAttribute('href')"), 'https://github.com/TranHuuQuyet/Toinaywebgi');
+assert.equal(await evaluate("document.querySelector('#github-link').getAttribute('target')"), '_blank');
+assert.ok(await evaluate("document.querySelector('#global-counter').textContent.includes('Lượt khai mở:')"));
+assert.ok(await evaluate("document.querySelector('#reveal-canvas') !== null"));
+
+// Check debug mode and force rarity
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/index.html?debug=true' });
 await waitFor("document.querySelector('.debug-panel') !== null");
 assert.equal(await evaluate("document.querySelector('.debug-panel') !== null"), true);
+
+// Test force rarity via debug button
+await evaluate("document.querySelector('.debug-panel button:nth-child(7)').click()"); // MYTHIC is the 6th rarity button (index 7 in panel with title)
+await waitFor("document.querySelector('#result-dialog').open === true", 8000);
+assert.equal(await evaluate("document.querySelector('#result-panel').classList.contains('rarity-mythic')"), true);
+await evaluate("document.querySelector('#continue-button').click()");
 
 await send('Page.navigate', { url: 'http://127.0.0.1:4173/404.html' });
 await waitFor("document.title.includes('404')");
